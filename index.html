@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>无意义宇宙中的你 | 信号接收中</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Space+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #050507;
+            --text-color: #d1d5db;
+            --phosphor-green: #4ade80;
+        }
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            background-color: var(--bg-color); color: var(--text-color);
+            font-family: "Noto Serif SC", serif; overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* 宇宙杂音背景 */
+        .cosmic-noise {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1;
+            pointer-events: none; opacity: 0.06;
+            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            animation: noise-shift 0.2s steps(2) infinite;
+        }
+        @keyframes noise-shift { 0% { transform: translate(0,0); } 100% { transform: translate(4px, 4px); } }
+
+        /* 扫描线 */
+        .scanlines {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 2;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.2) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
+            background-size: 100% 3px, 3px 100%; pointer-events: none;
+        }
+
+        /* 容器 */
+        #app {
+            position: relative; z-index: 10; width: 100%; height: 100%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+
+        .screen {
+            display: none; width: 100%; max-width: 800px; padding: 2rem; box-sizing: border-box;
+            animation: fadeIn 1s ease forwards;
+        }
+        .screen.active { display: flex; flex-direction: column; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 文字样式 */
+        .mono { font-family: 'Space Mono', monospace; font-size: 0.85rem; letter-spacing: 2px; color: var(--phosphor-green); }
+        .text-glitch { position: relative; }
+        .text-glitch::after {
+            content: attr(data-text); position: absolute; left: 2px; text-shadow: -1px 0 #ff00c1;
+            top: 0; color: #fff; background: var(--bg-color); overflow: hidden; clip: rect(0,0,0,0);
+            animation: glitch 4s infinite linear alternate-reverse;
+        }
+        @keyframes glitch {
+            2% { clip: rect(10px, 999px, 20px, 0); }
+            4% { clip: rect(0, 0, 0, 0); }
+        }
+
+        .intro-text { font-size: 1.15rem; line-height: 2; text-align: center; color: #9ca3af; }
+        .btn-initiate {
+            margin-top: 3rem; padding: 1rem 2rem; border: 1px solid var(--phosphor-green);
+            color: var(--phosphor-green); cursor: pointer; transition: all 0.3s;
+            background: transparent; align-self: center; outline: none;
+        }
+        .btn-initiate:hover { background: var(--phosphor-green); color: #000; box-shadow: 0 0 20px var(--phosphor-green); }
+
+        /* 问题页 */
+        .question-box { margin-bottom: 2.5rem; }
+        .question-text { font-size: 1.35rem; font-weight: 700; line-height: 1.7; margin-top: 1rem; color: #f3f4f6; }
+        .options-list { display: flex; flex-direction: column; gap: 1.2rem; }
+        .option-item {
+            padding: 1.2rem; border-left: 2px solid transparent; cursor: pointer;
+            transition: all 0.4s ease; color: #9ca3af; font-size: 1.05rem; line-height: 1.5;
+        }
+        .options-list:hover .option-item { opacity: 0.3; filter: blur(1px); }
+        .options-list .option-item:hover { 
+            opacity: 1; filter: blur(0); color: #fff; border-left: 2px solid var(--phosphor-green); 
+            padding-left: 1.8rem; background: rgba(255,255,255,0.03); transform: translateX(5px);
+        }
+
+        /* 示波器 */
+        #oscilloscope {
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 250px;
+            z-index: 5; pointer-events: none;
+        }
+
+        /* 结果页 - 修复滚动条与展示问题 */
+        #screen-result { 
+            overflow-y: auto; height: 100vh; justify-content: flex-start; 
+            padding-top: 3rem; padding-bottom: 6rem; align-items: center;
+            -webkit-overflow-scrolling: touch; /* iOS 顺滑滚动 */
+        }
+        /* 隐藏滚动条但保留滚动功能 */
+        #screen-result::-webkit-scrollbar { width: 0; background: transparent; }
+        
+        .result-actions { margin-top: 2rem; display: flex; flex-direction: column; gap: 1rem; align-items: center; margin-bottom: 4rem; }
+        
+        #poster-img { 
+            width: 90%; max-width: 450px; border-radius: 6px; 
+            box-shadow: 0 0 40px rgba(0,0,0,0.6); display: block; margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="cosmic-noise"></div>
+    <div class="scanlines"></div>
+    <canvas id="oscilloscope"></canvas>
+
+    <div id="app">
+        <!-- 首页 -->
+        <div id="screen-home" class="screen active">
+            <div class="intro-text">
+                NASA 发现了数千颗系外行星。<br>
+                有些过热，有些冰冷；<br>有些在宜居带边缘沉默运行；<br>
+                有些被重新定义，却仍然完整。<br><br>
+                我们不是单一的人格标签。<br>
+                我们是温度、轨道、大气、引力组成的行星系统。<br><br>
+                请不要选择你希望成为的自己。<br>
+                请选择你在深夜、疲惫、孤独时，<br>最接近的自己。
+            </div>
+            <button class="btn-initiate mono text-glitch" data-text="[ INITIATE SIGNAL ]" onclick="startTest()">[ INITIATE SIGNAL ]</button>
+        </div>
+
+        <!-- 答题页 -->
+        <div id="screen-question" class="screen">
+            <div class="mono" id="q-progress">SIGNAL 01/08</div>
+            <div class="question-box">
+                <div class="question-text" id="q-title"></div>
+            </div>
+            <div class="options-list" id="opt-list"></div>
+        </div>
+
+        <!-- 计算页 -->
+        <div id="screen-calc" class="screen" style="align-items:center; justify-content:center;">
+            <div class="mono text-glitch" id="calc-status" data-text="DECODING ORBITAL SIGNATURE..." style="font-size: 1.1rem; text-align:center;">DECODING ORBITAL SIGNATURE...</div>
+        </div>
+
+        <!-- 结果页 -->
+        <div id="screen-result" class="screen">
+            <div class="mono" style="margin-bottom:1.5rem; text-align:center; color: #6b7280;">[ 向下滚动查看 | 长按海报保存档案 ]</div>
+            <img id="poster-img" src="" alt="星际档案海报">
+            <div class="result-actions">
+                <button class="btn-initiate mono" onclick="location.reload()" style="margin-top:0;">[ RE-SCAN ]</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // 数据注入
+    const PLANET_CONFIGS = {"TOI-700_d": {"color": "#4ade80", "secondary": "#064e3b", "name": "TOI-700 d", "title": "\u5b89\u9759\u5b9c\u5c45\u8005", "quote": "\u4f60\u4e0d\u662f\u51b0\u3002\u4f60\u53ea\u662f\u66fe\u7ecf\u9700\u8981\u51b0\u3002\u4eba\u4eec\u7ad9\u5728\u4f60\u7684\u8868\u9762\uff0c\u8bf4\u8fd9\u91cc\u5bd2\u51b7\uff0c\u5b89\u9759\uff0c\u6ca1\u6709\u751f\u547d\u3002\u4ed6\u4eec\u8bf4\u5f97\u5e76\u975e\u5168\u9519\u3002\u4ed6\u4eec\u53ea\u662f\u6ca1\u6709\u62b5\u8fbe\u8db3\u591f\u6df1\u7684\u5730\u65b9\u3002", "id": "TESS-700D", "dimensions": {"orbital_stability": 5.0, "internal_ocean": 3.0, "atmospheric_defense": 3.0, "stellar_attachment": 2.0, "absurdity_perception": 3.0, "sisyphean_resistance": 4.5, "value_alignment": 4.0}}, "Europa": {"color": "#38bdf8", "secondary": "#0c4a6e", "name": "Europa \u6728\u536b\u4e8c", "title": "\u51b0\u58f3\u6df1\u6d77\u4eba\u683c", "quote": "\u4f60\u5e76\u4e0d\u662f\u6ca1\u6709\u60c5\u611f\uff0c\u800c\u662f\u4f60\u7684\u60c5\u611f\u592a\u6df1\uff0c\u4ee5\u81f3\u4e8e\u4e0d\u80fd\u968f\u4fbf\u4ea4\u7ed9\u4e00\u4e2a\u4e0d\u61c2\u6df1\u5ea6\u7684\u4eba\u3002", "id": "JUP-II", "dimensions": {"orbital_stability": 3.0, "internal_ocean": 5.0, "atmospheric_defense": 5.0, "stellar_attachment": 2.0, "absurdity_perception": 3.0, "sisyphean_resistance": 4.0, "value_alignment": 3.5}}, "Enceladus": {"color": "#f8fafc", "secondary": "#475569", "name": "Enceladus \u571f\u536b\u4e8c", "title": "\u88c2\u7f1d\u55b7\u6cc9\u4eba\u683c", "quote": "\u88c2\u7f1d\u4e0d\u662f\u5931\u8d25\u3002\u6709\u65f6\uff0c\u90a3\u662f\u6df1\u5904\u4ecd\u6709\u6d77\u7684\u8bc1\u636e\u3002", "id": "SAT-II", "dimensions": {"orbital_stability": 3.0, "internal_ocean": 5.0, "atmospheric_defense": 3.0, "stellar_attachment": 2.5, "absurdity_perception": 4.0, "sisyphean_resistance": 5.0, "value_alignment": 4.5}}, "Pluto": {"color": "#94a3b8", "secondary": "#1e293b", "name": "Pluto \u51a5\u738b\u661f", "title": "\u8fb9\u7f18\u5b8c\u6574\u8005", "quote": "\u6709\u4e00\u5929\uff0c\u4e16\u754c\u6539\u53d8\u4e86\u4f60\u7684\u540d\u5b57\u3002\u4f60\u6ca1\u6709\u56e0\u6b64\u505c\u6b62\u8fd0\u884c\u3002\u8fd9\u5c31\u662f\u4f60\u7684\u5c0a\u4e25\u3002", "id": "DW-134340", "dimensions": {"orbital_stability": 3.0, "internal_ocean": 4.0, "atmospheric_defense": 4.0, "stellar_attachment": 1.5, "absurdity_perception": 5.0, "sisyphean_resistance": 4.0, "value_alignment": 5.0}}, "55_Cancri_e": {"color": "#c084fc", "secondary": "#581c87", "name": "55 Cancri e", "title": "\u9ad8\u538b\u94bb\u77f3\u4eba\u683c", "quote": "\u4eba\u4e0d\u80fd\u6c38\u8fdc\u628a\u82e6\u96be\u5f53\u6210\u77ff\u5e8a\u3002\u603b\u6709\u4e00\u5929\uff0c\u4f60\u8981\u5b66\u4f1a\u5728\u6ca1\u6709\u538b\u8feb\u7684\u5730\u65b9\uff0c\u4ecd\u7136\u5141\u8bb8\u81ea\u5df1\u73cd\u8d35\u3002", "id": "DIAMOND-55", "dimensions": {"orbital_stability": 5.0, "internal_ocean": 3.0, "atmospheric_defense": 4.5, "stellar_attachment": 4.0, "absurdity_perception": 3.0, "sisyphean_resistance": 4.5, "value_alignment": 5.0}}, "HD_189733_b": {"color": "#2563eb", "secondary": "#1e3a8a", "name": "HD 189733 b", "title": "\u84dd\u8272\u98ce\u66b4\u4eba\u683c", "quote": "\u4eba\u4eec\u603b\u662f\u76f8\u4fe1\u84dd\u8272\u610f\u5473\u7740\u6d77\u3002\u4ed6\u4eec\u5fd8\u4e86\uff0c\u5b87\u5b99\u4ece\u4e0d\u627f\u8bfa\u989c\u8272\u7684\u542b\u4e49\u3002", "id": "EXO-189", "dimensions": {"orbital_stability": 2.0, "internal_ocean": 5.0, "atmospheric_defense": 5.0, "stellar_attachment": 3.0, "absurdity_perception": 4.5, "sisyphean_resistance": 3.0, "value_alignment": 3.5}}, "WASP-12b": {"color": "#fb923c", "secondary": "#7c2d12", "name": "WASP-12b", "title": "\u88ab\u541e\u566c\u7684\u70ed\u70c8\u8005", "quote": "\u4e0d\u662f\u6240\u6709\u5149\u90fd\u503c\u5f97\u9760\u8fd1\u3002\u6709\u4e9b\u5149\u53ea\u662f\u5728\u7ec3\u4e60\u541e\u566c\u3002", "id": "HOT-JUP-12", "dimensions": {"orbital_stability": 1.5, "internal_ocean": 4.0, "atmospheric_defense": 2.0, "stellar_attachment": 5.0, "absurdity_perception": 3.5, "sisyphean_resistance": 2.5, "value_alignment": 2.5}}, "K2-18_b": {"color": "#2dd4bf", "secondary": "#134e4a", "name": "K2-18 b", "title": "\u6df1\u6d77\u672a\u77e5\u8005", "quote": "\u88ab\u770b\u89c1\u7684\u4ece\u6765\u4e0d\u662f\u6d77\uff0c\u53ea\u662f\u6d77\u8bd5\u56fe\u62b5\u8fbe\u5929\u7a7a\u7684\u8bc1\u636e\u3002", "id": "K2-18-B", "dimensions": {"orbital_stability": 3.0, "internal_ocean": 5.0, "atmospheric_defense": 4.0, "stellar_attachment": 2.5, "absurdity_perception": 4.0, "sisyphean_resistance": 3.5, "value_alignment": 4.0}}, "Titan": {"color": "#fbbf24", "secondary": "#78350f", "name": "Titan \u571f\u536b\u516d", "title": "\u5f02\u4e16\u754c\u5927\u6c14\u4eba\u683c", "quote": "\u964c\u751f\u4e0d\u662f\u9519\u8bef\u3002\u4e0d\u540c\u4e5f\u4e0d\u662f\u5931\u8d25\u3002\u4f60\u53ef\u4ee5\u62e5\u6709\u81ea\u5df1\u7684\u5929\u6c14\uff0c\u81ea\u5df1\u7684\u6e56\u6cca\uff0c\u81ea\u5df1\u7684\u591c\u665a\u3002", "id": "SAT-VI", "dimensions": {"orbital_stability": 3.5, "internal_ocean": 4.0, "atmospheric_defense": 5.0, "stellar_attachment": 1.5, "absurdity_perception": 4.5, "sisyphean_resistance": 4.0, "value_alignment": 5.0}}, "Proxima_Centauri_b": {"color": "#f472b6", "secondary": "#831843", "name": "Proxima Centauri b", "title": "\u6700\u8fd1\u7684\u5b64\u72ec\u8005", "quote": "\u8ddd\u79bb\u4e0d\u662f\u7528\u5149\u5e74\u6765\u8ba1\u7b97\u7684\u3002\u6709\u4e9b\u4eba\u5750\u5728\u4f60\u8eab\u8fb9\uff0c\u5374\u4ecd\u50cf\u53e6\u4e00\u9897\u661f\u3002", "id": "PROX-B", "dimensions": {"orbital_stability": 3.0, "internal_ocean": 4.5, "atmospheric_defense": 4.0, "stellar_attachment": 4.0, "absurdity_perception": 4.0, "sisyphean_resistance": 3.0, "value_alignment": 3.5}}, "Kepler-452b": {"color": "#84cc16", "secondary": "#365314", "name": "Kepler-452b", "title": "\u65e7\u5730\u7403\u7ee7\u627f\u8005", "quote": "\u4f60\u4e0d\u662f\u8001\u53bb\u5f97\u592a\u5feb\u3002\u4f60\u53ea\u662f\u592a\u65e9\u5b66\u4f1a\u4e86\u66ff\u4e16\u754c\u627f\u62c5\u91cd\u91cf\u3002", "id": "KEP-452", "dimensions": {"orbital_stability": 5.0, "internal_ocean": 3.0, "atmospheric_defense": 3.0, "stellar_attachment": 3.0, "absurdity_perception": 3.0, "sisyphean_resistance": 4.5, "value_alignment": 4.5}}, "GJ_1214_b": {"color": "#64748b", "secondary": "#0f172a", "name": "GJ 1214 b", "title": "\u96fe\u5c42\u4fdd\u62a4\u8005", "quote": "\u6709\u65f6\uff0c\u4e0d\u88ab\u770b\u6e05\u4e0d\u662f\u9003\u907f\uff0c\u800c\u662f\u4fdd\u5b58\u3002\u4f60\u4e0d\u9700\u8981\u5411\u6240\u6709\u4eba\u6563\u53bb\u5927\u6c14\u3002\u900f\u660e\u4e0d\u662f\u552f\u4e00\u7684\u8bda\u5b9e\u3002", "id": "GJ-1214", "dimensions": {"orbital_stability": 3.0, "internal_ocean": 4.5, "atmospheric_defense": 5.0, "stellar_attachment": 2.0, "absurdity_perception": 3.5, "sisyphean_resistance": 3.5, "value_alignment": 4.0}}};
+    const QUESTIONS = [{"id": "Q1", "q": "\u51cc\u6668\u4e09\u70b9\uff0c\u4f60\u88ab\u4e00\u9635\u6781\u5176\u89c4\u5f8b\u3001\u4f46\u6beb\u65e0\u610f\u4e49\u7684\u6ef4\u6c34\u58f0\u5435\u9192\u3002\u660e\u5929\u8fd8\u6709\u91cd\u8981\u7684\u4e8b\u3002", "opts": [{"t": "\u7acb\u5373\u8d77\u5e8a\uff0c\u627e\u5230\u58f0\u6e90\u5f7b\u5e95\u62e7\u7d27\uff0c\u7136\u540e\u5f3a\u8feb\u81ea\u5df1\u8fc5\u901f\u91cd\u65b0\u8fdb\u5165\u7761\u7720\u8f68\u9053\u3002", "w": {"orbital_stability": 3}}, {"t": "\u8eba\u5728\u9ed1\u6697\u91cc\u542c\u7740\u90a3\u4e2a\u58f0\u97f3\uff0c\u8111\u6d77\u5f00\u59cb\u65e0\u8fb9\u65e0\u9645\u5730\u6f2b\u6e38\uff0c\u751a\u81f3\u5fd8\u8bb0\u4e86\u660e\u5929\u7684\u7126\u8651\u3002", "w": {"internal_ocean": 3}}, {"t": "\u6234\u4e0a\u964d\u566a\u8033\u673a\uff0c\u95ed\u4e0a\u773c\u775b\uff0c\u7528\u7269\u7406\u624b\u6bb5\u5c06\u81ea\u5df1\u4e0e\u5916\u754c\u7684\u5e72\u6270\u5f7b\u5e95\u9694\u7edd\u3002", "w": {"atmospheric_defense": 3}}, {"t": "\u611f\u5230\u4e00\u9635\u83ab\u540d\u7684\u70e6\u8e81\u6216\u5174\u594b\uff0c\u5e72\u8106\u8d77\u5e8a\u4e0d\u518d\u7761\u4e86\uff0c\u4e3b\u52a8\u6253\u788e\u8fd9\u65e0\u804a\u7684\u7761\u7720\u8282\u5f8b\u3002", "w": {"orbital_stability": -2, "absurdity_perception": 2}}]}, {"id": "Q2", "q": "\u907f\u96e8\u65f6\uff0c\u4f60\u76ef\u7740\u4fbf\u5229\u5e97\u91cc\u90a3\u53f0\u6beb\u65e0\u610f\u4e49\u3001\u7f13\u6162\u65cb\u8f6c\u7684\u70e4\u80a0\u673a\u770b\u4e86\u6574\u6574\u5341\u5206\u949f\u3002", "opts": [{"t": "\u89c9\u5f97\u5b9e\u5728\u592a\u65e0\u804a\u4e86\uff0c\u7acb\u523b\u62ff\u51fa\u624b\u673a\u5bfb\u627e\u5176\u4ed6\u523a\u6fc0\u6216\u4fe1\u606f\u6765\u586b\u8865\u7a7a\u767d\u3002", "w": {"internal_ocean": -2, "orbital_stability": 1}}, {"t": "\u770b\u7740\u90a3\u7f13\u6162\u7684\u65cb\u8f6c\uff0c\u7a81\u7136\u9677\u5165\u4e00\u79cd\u5e9e\u5927\u7684\u3001\u5173\u4e8e\u65f6\u95f4\u6d41\u901d\u7684\u60b2\u4f24\u6216\u865a\u65e0\u91cc\u3002", "w": {"internal_ocean": 3, "absurdity_perception": 2}}, {"t": "\u89c9\u5f97\u8fd9\u6839\u70e4\u80a0\u5728\u67d0\u79cd\u7a0b\u5ea6\u4e0a\u548c\u81ea\u5df1\u5f88\u50cf\uff0c\u5728\u65e0\u4eba\u5728\u610f\u7684\u89d2\u843d\u6301\u7eed\u4e14\u5b64\u72ec\u5730\u8fd0\u884c\u7740\u3002", "w": {"value_alignment": 2, "absurdity_perception": 2}}, {"t": "\u5f00\u59cb\u5728\u8111\u6d77\u91cc\u8bc4\u5224\u8fd9\u53f0\u673a\u5668\u7684\u8fd0\u8f6c\u6548\u7387\uff0c\u6216\u8005\u601d\u8003\u5b83\u4e3a\u4f55\u5728\u6ca1\u5ba2\u4eba\u65f6\u8fd8\u8981\u5f00\u7740\u3002", "w": {"orbital_stability": 3}}]}, {"id": "Q3", "q": "\u4e58\u5750\u6f2b\u957f\u7684\u7a7a\u7535\u68af\u65f6\uff0c\u65c1\u8fb9\u4e00\u4e2a\u964c\u751f\u4eba\u7a81\u7136\u95ee\u4f60\uff1a\u201c\u4f60\u89c9\u5f97\u9e1f\u4f1a\u540e\u6094\u98de\u7fd4\u5417\uff1f\u201d", "opts": [{"t": "\u8ba4\u771f\u601d\u8003\u4e86\u4e00\u79d2\uff0c\u7136\u540e\u5411\u4ed6\u5c55\u9732\u4e86\u4f60\u771f\u5b9e\u7684\u3001\u6216\u8bb8\u6709\u4e9b\u8106\u5f31\u7684\u7b54\u6848\u3002", "w": {"atmospheric_defense": -3}}, {"t": "\u793c\u8c8c\u5730\u7b11\u4e86\u4e00\u4e0b\uff0c\u7ed9\u51fa\u4e00\u4e2a\u6ef4\u6c34\u4e0d\u6f0f\u3001\u7b26\u5408\u793e\u4ea4\u89c4\u8303\u7684\u6577\u884d\u56de\u7b54\u3002", "w": {"atmospheric_defense": 2, "orbital_stability": 1}}, {"t": "\u5047\u88c5\u6ca1\u542c\u89c1\uff0c\u6216\u8005\u4f4e\u5934\u770b\u624b\u673a\uff0c\u7528\u7edd\u5bf9\u7684\u6c89\u9ed8\u62d2\u7edd\u8fd9\u79cd\u7a81\u5982\u5176\u6765\u7684\u8bd5\u63a2\u3002", "w": {"atmospheric_defense": 3}}, {"t": "\u6beb\u4e0d\u9000\u7f29\u5730\u76ef\u7740\u4ed6\uff0c\u7528\u53e6\u4e00\u4e2a\u66f4\u8352\u8c2c\u7684\u95ee\u9898\u53cd\u95ee\uff0c\u628a\u5c40\u9762\u7684\u5931\u63a7\u611f\u63a8\u56de\u53bb\u3002", "w": {"atmospheric_defense": 2, "sisyphean_resistance": 2}}]}, {"id": "Q4", "q": "\u8d70\u5728\u6781\u5176\u5e73\u5eb8\u7684\u8857\u4e0a\uff0c\u4f60\u770b\u5230\u5730\u7f1d\u91cc\u5361\u7740\u4e00\u5757\u53cd\u5c04\u7740\u5947\u7279\u5149\u8292\u3001\u4f46\u6beb\u65e0\u7528\u5904\u7684\u73bb\u7483\u788e\u7247\u3002", "opts": [{"t": "\u53ea\u662f\u770b\u4e86\u4e00\u773c\u4fbf\u7ee7\u7eed\u8d70\u3002\u6ca1\u6709\u5b9e\u9645\u610f\u4e49\u7684\u4e1c\u897f\u4e0d\u503c\u5f97\u505c\u7559\u3002", "w": {"stellar_attachment": -3, "orbital_stability": 1}}, {"t": "\u628a\u5b83\u6361\u56de\u5bb6\uff0c\u5728\u63a5\u4e0b\u6765\u7684\u51e0\u5929\u91cc\u9891\u7e41\u5730\u6ce8\u89c6\u5b83\uff0c\u751a\u81f3\u8d4b\u4e88\u5b83\u67d0\u79cd\u9690\u79d8\u7684\u610f\u4e49\u3002", "w": {"stellar_attachment": 3}}, {"t": "\u505c\u4e0b\u6765\u5728\u5b83\u65c1\u8fb9\u7ad9\u4e00\u4f1a\u513f\uff0c\u786e\u8ba4\u5b83\u5b58\u5728\u8fc7\uff0c\u7136\u540e\u72ec\u81ea\u79bb\u5f00\u3002", "w": {"value_alignment": 2, "atmospheric_defense": 1}}, {"t": "\u628a\u5b83\u6361\u8d77\u6b7b\u6b7b\u6525\u5728\u624b\u5fc3\uff0c\u54ea\u6015\u8fb9\u7f18\u6781\u5176\u950b\u5229\u5212\u75db\u4e86\u76ae\u80a4\uff0c\u4e5f\u89c9\u5f97\u6709\u4e00\u79cd\u771f\u5b9e\u611f\u3002", "w": {"stellar_attachment": 3, "sisyphean_resistance": 1}}]}, {"id": "Q5", "q": "\u4f60\u82b1\u4e86\u5f88\u4e45\u6392\u597d\u4e00\u6392\u591a\u7c73\u8bfa\u9aa8\u724c\u3002\u521a\u6392\u5b8c\uff0c\u4e00\u9635\u65e0\u540d\u98ce\u5439\u6765\uff0c\u9aa8\u724c\u77ac\u95f4\u5168\u5012\uff0c\u4e14\u65e0\u4eba\u770b\u89c1\u3002", "opts": [{"t": "\u611f\u5230\u975e\u5e38\u6124\u6012\u548c\u632b\u8d25\uff0c\u89c9\u5f97\u81ea\u5df1\u7684\u5fc3\u8840\u548c\u65f6\u95f4\u88ab\u5f7b\u5e95\u6bc1\u4e86\u3002", "w": {"absurdity_perception": -2}}, {"t": "\u7ad9\u5728\u539f\u5730\uff0c\u89c9\u5f97\u8fd9\u79cd\u201c\u4e00\u5207\u77ac\u95f4\u6e05\u96f6\u201d\u7684\u753b\u9762\u6709\u4e00\u79cd\u6ed1\u7a3d\u7684\u5bbf\u547d\u611f\uff0c\u751a\u81f3\u60f3\u7b11\u3002", "w": {"absurdity_perception": 3}}, {"t": "\u89c9\u5f97\u8fd9\u624d\u662f\u4e16\u754c\u7684\u5e38\u6001\u3002\u4ec0\u4e48\u90fd\u6ca1\u7559\u4e0b\uff0c\u53cd\u800c\u8ba9\u4eba\u611f\u5230\u4e00\u79cd\u4e0d\u7528\u5411\u8c01\u4ea4\u4ee3\u7684\u8f7b\u677e\u3002", "w": {"absurdity_perception": 3, "stellar_attachment": -2}}, {"t": "\u6ca1\u4ec0\u4e48\u592a\u5927\u7684\u60c5\u7eea\u6ce2\u52a8\uff0c\u53ea\u662f\u9ed8\u9ed8\u5730\u8e72\u4e0b\u6765\uff0c\u51c6\u5907\u91cd\u65b0\u518d\u6392\u4e00\u6b21\u3002", "w": {"sisyphean_resistance": 3, "orbital_stability": 2}}]}, {"id": "Q6", "q": "\u4f60\u8fde\u7eed\u51e0\u5929\u505a\u540c\u4e00\u4e2a\u68a6\uff1a\u68a6\u91cc\u4f60\u4e00\u76f4\u5728\u4e00\u6761\u957f\u957f\u7684\u8d70\u5eca\u91cc\u627e\u4e00\u6247\u4e0d\u5b58\u5728\u7684\u95e8\u3002", "opts": [{"t": "\u9192\u6765\u540e\u8bb0\u5f55\u4e0b\u68a6\u5883\uff0c\u5206\u6790\u81ea\u5df1\u6700\u8fd1\u7684\u538b\u529b\u6e90\uff0c\u5e76\u5c1d\u8bd5\u5728\u73b0\u5b9e\u4e2d\u5bfb\u627e\u89e3\u51b3\u7126\u8651\u7684\u529e\u6cd5\u3002", "w": {"orbital_stability": 3}}, {"t": "\u89c9\u5f97\u8fd9\u4e2a\u68a6\u662f\u67d0\u79cd\u6df1\u523b\u7684\u6f5c\u610f\u8bc6\u9690\u55bb\uff0c\u6697\u793a\u4f60\u7684\u4eba\u751f\u6c38\u8fdc\u88ab\u56f0\u5728\u5bfb\u627e\u610f\u4e49\u7684\u8d70\u5eca\u91cc\u3002", "w": {"absurdity_perception": 3, "internal_ocean": 2}}, {"t": "\u5f3a\u8feb\u81ea\u5df1\u5728\u7761\u524d\u4e0d\u53bb\u60f3\u5b83\uff0c\u751a\u81f3\u5403\u892a\u9ed1\u7d20\u3002\u4f60\u8ba8\u538c\u8fd9\u79cd\u8fde\u68a6\u5883\u90fd\u65e0\u6cd5\u9632\u5fa1\u7684\u5931\u63a7\u611f\u3002", "w": {"atmospheric_defense": 3}}, {"t": "\u5728\u4e0b\u4e00\u6b21\u505a\u68a6\u65f6\uff0c\u8bd5\u56fe\u5728\u68a6\u91cc\u7838\u788e\u8d70\u5eca\u7684\u5899\u58c1\uff0c\u5f3a\u884c\u7528\u610f\u8bc6\u63a5\u7ba1\u68a6\u5883\u7684\u8d70\u5411\u3002", "w": {"sisyphean_resistance": 3}}]}, {"id": "Q7", "q": "\u6536\u5230\u5feb\u9012\u540e\uff0c\u4f60\u624b\u91cc\u62ff\u7740\u4e00\u5f20\u7528\u4e8e\u7f13\u51b2\u7684\u6c14\u6ce1\u7eb8\u3002", "opts": [{"t": "\u628a\u5b83\u5e73\u6574\u5730\u6298\u53e0\u597d\uff0c\u6536\u8fdb\u5e9f\u54c1\u7bb1\uff0c\u4fdd\u6301\u684c\u9762\u7684\u7edd\u5bf9\u6574\u6d01\u548c\u79e9\u5e8f\u3002", "w": {"orbital_stability": 3}}, {"t": "\u634f\u7834\u4e00\u4e2a\u6c14\u6ce1\u3002\u542c\u7740\u201c\u556a\u201d\u7684\u4e00\u58f0\uff0c\u89c9\u5f97\u77ed\u6682\u7684\u7834\u574f\u6b32\u662f\u586b\u8865\u5185\u5fc3\u7a7a\u865a\u7684\u5fae\u5c0f\u5b89\u6170\u3002", "w": {"internal_ocean": 2, "absurdity_perception": 1}}, {"t": "\u5b8c\u6574\u5730\u6254\u6389\u5b83\u3002\u4f60\u4e0d\u559c\u6b22\u5236\u9020\u51fa\u4efb\u4f55\u7ec6\u788e\u7684\u3001\u4e0d\u5fc5\u8981\u7684\u566a\u97f3\u6765\u66b4\u9732\u81ea\u5df1\u7684\u5b58\u5728\u3002", "w": {"atmospheric_defense": 3}}, {"t": "\u7528\u529b\u62e7\u6210\u4e00\u56e2\uff0c\u8ba9\u6240\u6709\u7684\u6c14\u6ce1\u5728\u540c\u4e00\u79d2\u949f\u5bc6\u96c6\u5730\u7206\u88c2\uff0c\u4eab\u53d7\u6beb\u65e0\u610f\u4e49\u7684\u72c2\u6b22\u3002", "w": {"absurdity_perception": 3, "sisyphean_resistance": 1}}]}, {"id": "Q8", "q": "\u5728\u4e00\u5bb6\u5608\u6742\u7684\u5feb\u9910\u5385\uff0c\u5468\u56f4\u7a81\u7136\u56e0\u4e3a\u67d0\u79cd\u5de7\u5408\uff0c\u9677\u5165\u4e86\u957f\u8fbe\u4e94\u79d2\u949f\u7684\u7edd\u5bf9\u6b7b\u5bc2\u3002", "opts": [{"t": "\u8d81\u7740\u5b89\u9759\uff0c\u5feb\u901f\u4e14\u4e13\u6ce8\u5730\u5403\u5b8c\u6700\u540e\u51e0\u53e3\u996d\uff0c\u51c6\u5907\u8d76\u8d74\u4e0b\u4e00\u4e2a\u65e5\u7a0b\u3002", "w": {"orbital_stability": 3}}, {"t": "\u611f\u53d7\u7740\u8fd9\u7a81\u5982\u5176\u6765\u7684\u5bc2\u9759\uff0c\u89c9\u5f97\u8fd9\u624d\u662f\u4e16\u754c\u9732\u51fa\u7684\u4ee4\u4eba\u6218\u6817\u7684\u771f\u5b9e\u5e95\u7247\u3002", "w": {"absurdity_perception": 3, "internal_ocean": 2}}, {"t": "\u611f\u5230\u6781\u5ea6\u5c34\u5c2c\uff0c\u7acb\u523b\u4f4e\u4e0b\u5934\u5047\u88c5\u770b\u624b\u673a\uff0c\u751f\u6015\u81ea\u5df1\u5480\u56bc\u7684\u58f0\u97f3\u6253\u7834\u8be1\u5f02\u7684\u5b81\u9759\u3002", "w": {"atmospheric_defense": 3}}, {"t": "\u6545\u610f\u91cd\u91cd\u5730\u653e\u4e0b\u624b\u91cc\u7684\u6c34\u676f\uff0c\u7528\u4e00\u58f0\u6e05\u8106\u7684\u201c\u5f53\u201d\u58f0\uff0c\u4e3b\u52a8\u51fb\u788e\u8fd9\u79cd\u8ba9\u4eba\u53d1\u75af\u7684\u6c89\u9ed8\u3002", "w": {"sisyphean_resistance": 3, "value_alignment": 2}}]}];
+
+    let currentQ = 0;
+    let scores = { orbital_stability: 0, internal_ocean: 0, atmospheric_defense: 0, stellar_attachment: 0, absurdity_perception: 0, sisyphean_resistance: 0, value_alignment: 0 };
+
+    // --- 不规则示波器引擎 (Irregular Oscilloscope Engine) ---
+    const waveCanvas = document.getElementById('oscilloscope');
+    const waveCtx = waveCanvas.getContext('2d');
+    let waveOffset = 0;
+    let amplitude = 12; // 极低的常态振幅
+    let targetAmplitude = 12;
+    let noiseFactor = 0.5;
+
+    function resizeWave() {
+        waveCanvas.width = window.innerWidth;
+        waveCanvas.height = 250;
+    }
+    window.addEventListener('resize', resizeWave);
+    resizeWave();
+
+    function drawWave() {
+        waveCtx.clearRect(0, 0, waveCanvas.width, waveCanvas.height);
+        
+        // 物理阻尼与平滑平息
+        amplitude += (targetAmplitude - amplitude) * 0.08;
+        if (targetAmplitude > 12) targetAmplitude -= 0.8; // 快速衰减
+        noiseFactor = amplitude / 12;
+
+        waveCtx.beginPath();
+        waveCtx.lineWidth = 1.8;
+        waveCtx.strokeStyle = 'rgba(74, 222, 128, 0.7)';
+        waveCtx.shadowBlur = 10;
+        waveCtx.shadowColor = '#4ade80';
+
+        const centerY = waveCanvas.height / 2;
+        
+        for (let x = 0; x < waveCanvas.width; x++) {
+            // 叠加多重正弦波产生不规则模拟信号感
+            let lf = Math.sin(x * 0.008 + waveOffset * 0.5) * amplitude;
+            let mf = Math.sin(x * 0.04 - waveOffset * 1.2) * (amplitude * 0.4);
+            let hf = Math.sin(x * 0.15 + waveOffset * 2) * (amplitude * 0.15 * noiseFactor);
+            // 细碎电平抖动
+            let jitter = (Math.random() - 0.5) * noiseFactor * 4;
+
+            let y = centerY + lf + mf + hf + jitter;
+            
+            if (x === 0) waveCtx.moveTo(x, y);
+            else waveCtx.lineTo(x, y);
+        }
+        
+        waveCtx.stroke();
+        waveOffset += 0.04;
+        requestAnimationFrame(drawWave);
+    }
+    drawWave();
+
+    // 触发情绪震荡
+    function triggerShock() {
+        targetAmplitude = 95; // 瞬间爆发极高振幅
+    }
+
+    // --- 流程控制 ---
+    function startTest() {
+        triggerShock();
+        document.getElementById('screen-home').classList.remove('active');
+        setTimeout(() => {
+            document.getElementById('screen-question').classList.add('active');
+            renderQuestion();
+        }, 600);
+    }
+
+    function renderQuestion() {
+        const qData = QUESTIONS[currentQ];
+        const progText = `SIGNAL ${String(currentQ+1).padStart(2,'0')}/${String(QUESTIONS.length).padStart(2,'0')}`;
+        document.getElementById('q-progress').innerText = progText;
+        document.getElementById('q-progress').setAttribute('data-text', progText);
+        document.getElementById('q-title').innerText = qData.q;
+        
+        const list = document.getElementById('opt-list');
+        list.innerHTML = '';
+        qData.opts.forEach(opt => {
+            const div = document.createElement('div');
+            div.className = 'option-item';
+            div.innerText = opt.t;
+            div.onclick = () => selectOption(opt.w);
+            list.appendChild(div);
+        });
+    }
+
+    function selectOption(weights) {
+        triggerShock();
+        for (let k in weights) scores[k] += weights[k];
+        
+        document.getElementById('screen-question').classList.remove('active');
+        setTimeout(() => {
+            if (currentQ < QUESTIONS.length - 1) {
+                currentQ++;
+                renderQuestion();
+                document.getElementById('screen-question').classList.add('active');
+            } else {
+                showCalc();
+            }
+        }, 500);
+    }
+
+    function showCalc() {
+        document.getElementById('screen-calc').classList.add('active');
+        
+        const statuses = ["ANALYZING ATMOSPHERE...", "MAPPING ORBITAL DATA...", "DECRYPTING INNER OCEAN...", "FINALIZING COORDINATES..."];
+        let i = 0;
+        const intv = setInterval(() => {
+            document.getElementById('calc-status').innerText = statuses[i];
+            document.getElementById('calc-status').setAttribute('data-text', statuses[i]);
+            i++;
+            if(i >= statuses.length) {
+                clearInterval(intv);
+                generateFinalPoster();
+            }
+        }, 900);
+    }
+
+    // --- 海报生成引擎 2.0 ---
+    function generateFinalPoster() {
+        // 余弦相似度匹配算法
+        let bestPlanet = null;
+        let maxSimilarity = -Infinity;
+
+        for (let key in PLANET_CONFIGS) {
+            let p = PLANET_CONFIGS[key];
+            let dotProduct = 0, normA = 0, normB = 0;
+            for (let dim in scores) {
+                let valA = scores[dim] || 0;
+                // 放大基准分适应少量题库
+                let valB = (p.dimensions[dim] || 3) * (QUESTIONS.length / 5); 
+                dotProduct += valA * valB;
+                normA += valA * valA;
+                normB += valB * valB;
+            }
+            let sim = dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+            if (sim > maxSimilarity || isNaN(sim)) {
+                maxSimilarity = sim;
+                bestPlanet = p;
+            }
+        }
+
+        // 防止计算全是0的情况
+        if(!bestPlanet) bestPlanet = PLANET_CONFIGS["Europa"];
+
+        // Canvas绘制
+        const canvas = document.createElement('canvas');
+        canvas.width = 800; canvas.height = 1350; // 加长海报以容纳全部文字
+        const ctx = canvas.getContext('2d');
+
+        // 纯黑背景
+        ctx.fillStyle = '#050507';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // 绘制宇宙星尘噪点
+        for(let i=0; i<600; i++) {
+            ctx.fillStyle = `rgba(255,255,255,${Math.random()*0.4})`;
+            ctx.fillRect(Math.random()*canvas.width, Math.random()*canvas.height, Math.random()*1.5, Math.random()*1.5);
+        }
+
+        // 专属星球色晕背景
+        const grad = ctx.createRadialGradient(400, 380, 50, 400, 380, 400);
+        grad.addColorStop(0, bestPlanet.color + '33');
+        grad.addColorStop(1, 'transparent');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, canvas.width, 800);
+
+        // 绘制雷达图
+        drawRadar(ctx, 400, 380, 160, bestPlanet.color, scores);
+
+        // --- 文本渲染排版 ---
+        ctx.textAlign = 'center';
+        
+        // 坐标编号
+        ctx.fillStyle = bestPlanet.color;
+        ctx.font = "18px 'Space Mono', monospace";
+        ctx.fillText(`COORDINATE ESTABLISHED // ${bestPlanet.id}`, 400, 700);
+
+        // 星球名称
+        ctx.fillStyle = '#ffffff';
+        ctx.font = "bold 64px 'Noto Serif SC', serif";
+        ctx.fillText(bestPlanet.name, 400, 780);
+
+        // 称号
+        ctx.fillStyle = bestPlanet.color;
+        ctx.font = "italic 32px 'Noto Serif SC', serif";
+        ctx.fillText(`—— ${bestPlanet.title} ——`, 400, 840);
+
+        // 核心心理引言金句
+        ctx.fillStyle = '#f3f4f6';
+        ctx.font = "26px 'Noto Serif SC', serif";
+        let nextY = wrapText(ctx, bestPlanet.quote, 400, 930, 600, 42);
+
+        // 底部装饰线
+        ctx.strokeStyle = bestPlanet.secondary;
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(350, nextY + 30); ctx.lineTo(450, nextY + 30); ctx.stroke();
+        
+        ctx.fillStyle = '#6b7280';
+        ctx.font = "14px 'Space Mono', monospace";
+        ctx.fillText(`SYSTEM.LOG.END // GRAVITY COLLAPSE`, 400, nextY + 70);
+
+        // 渲染到页面
+        document.getElementById('poster-img').src = canvas.toDataURL('image/png');
+        document.getElementById('screen-calc').classList.remove('active');
+        document.getElementById('screen-result').classList.add('active');
+    }
+
+    function drawRadar(ctx, cx, cy, radius, color, userScores) {
+        const axes = 7;
+        ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+        ctx.lineWidth = 1;
+        
+        // 绘制八角网格
+        for(let j=1; j<=3; j++) {
+            ctx.beginPath();
+            let r = radius * (j/3);
+            for(let i=0; i<=axes; i++) {
+                let angle = (Math.PI*2/axes)*i - Math.PI/2;
+                if(i===0) ctx.moveTo(cx + Math.cos(angle)*r, cy + Math.sin(angle)*r);
+                else ctx.lineTo(cx + Math.cos(angle)*r, cy + Math.sin(angle)*r);
+            }
+            ctx.stroke();
+        }
+
+        // 骨架线
+        for(let i=0; i<axes; i++) {
+            let angle = (Math.PI*2/axes)*i - Math.PI/2;
+            ctx.beginPath(); ctx.moveTo(cx, cy);
+            ctx.lineTo(cx + Math.cos(angle)*radius, cy + Math.sin(angle)*radius);
+            ctx.stroke();
+        }
+
+        // 提取分数绘制个人图形
+        let maxScore = 15; // 基准峰值
+        ctx.beginPath();
+        ctx.strokeStyle = color;
+        ctx.fillStyle = color + '2A'; // 增加透明度后缀
+        ctx.lineWidth = 3;
+        
+        let idx = 0;
+        for(let dim in userScores) {
+            let angle = (Math.PI*2/axes)*idx - Math.PI/2;
+            let val = Math.abs(userScores[dim] || 0);
+            let r = radius * (val / maxScore);
+            // 保证最小形状并加上一点随机抖动让多边形更自然
+            r = Math.max(30, Math.min(radius, r * (0.8 + Math.random()*0.4))); 
+
+            if(idx===0) ctx.moveTo(cx + Math.cos(angle)*r, cy + Math.sin(angle)*r);
+            else ctx.lineTo(cx + Math.cos(angle)*r, cy + Math.sin(angle)*r);
+            idx++;
+        }
+        ctx.closePath();
+        ctx.fill(); 
+        ctx.stroke();
+        
+        // 顶点发光点
+        idx = 0;
+        for(let dim in userScores) {
+            let angle = (Math.PI*2/axes)*idx - Math.PI/2;
+            let val = Math.abs(userScores[dim] || 0);
+            let r = radius * (val / maxScore);
+            r = Math.max(30, Math.min(radius, r * (0.8 + Math.random()*0.4))); 
+            
+            ctx.beginPath();
+            ctx.arc(cx + Math.cos(angle)*r, cy + Math.sin(angle)*r, 4, 0, Math.PI*2);
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+            idx++;
+        }
+    }
+
+    // 换行渲染文字辅助函数
+    function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+        const words = text.split('');
+        let line = '';
+        for(let n = 0; n < words.length; n++) {
+            let testLine = line + words[n];
+            let metrics = ctx.measureText(testLine);
+            if (metrics.width > maxWidth && n > 0) {
+                ctx.fillText(line, x, y);
+                line = words[n];
+                y += lineHeight;
+            } else { line = testLine; }
+        }
+        ctx.fillText(line, x, y);
+        return y; // 返回最终的Y坐标高度
+    }
+</script>
+</body>
+</html>
