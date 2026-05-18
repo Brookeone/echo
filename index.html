@@ -1,450 +1,872 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>无意义宇宙中的你 | 信号接收中</title>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Space+Mono&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-color: #050507;
-            --text-color: #d1d5db;
-            --phosphor-green: #4ade80;
-        }
-        body, html {
-            margin: 0; padding: 0; width: 100%; height: 100%;
-            background-color: var(--bg-color); color: var(--text-color);
-            font-family: "Noto Serif SC", serif; overflow: hidden;
-            -webkit-tap-highlight-color: transparent;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>无意义宇宙中的你 — 引力崩塌</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#050507;--bg2:#0a0a0e;
+  --fg:#b8bbd0;--fg-bright:#dde0f0;--fg-dim:#4a4d62;--fg-ghost:#1a1c2a;
+  --green:#4ade80;--green-glow:rgba(74,222,128,0.32);--green-dim:rgba(74,222,128,0.1);
+  --cyan:#38bdf8;--cyan-dim:rgba(56,189,248,0.1);
+  --serif:'Noto Serif SC','STSong','SimSun',serif;
+  --mono:'Space Mono','Courier New',monospace;
+}
+html{font-size:16px;scroll-behavior:smooth}
+body{background:var(--bg);color:var(--fg);font-family:var(--serif);min-height:100vh;overflow-x:hidden;cursor:crosshair;-webkit-font-smoothing:antialiased}
 
-        /* 宇宙杂音背景 */
-        .cosmic-noise {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1;
-            pointer-events: none; opacity: 0.06;
-            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-            animation: noise-shift 0.2s steps(2) infinite;
-        }
-        @keyframes noise-shift { 0% { transform: translate(0,0); } 100% { transform: translate(4px, 4px); } }
+/* NOISE */
+#noise{position:fixed;inset:-60%;width:220%;height:220%;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity:.028;pointer-events:none;z-index:9000;
+  animation:noise-s .16s steps(2) infinite;will-change:transform}
+@keyframes noise-s{0%{transform:translate(0,0)}25%{transform:translate(-5px,3px)}50%{transform:translate(4px,-4px)}75%{transform:translate(-3px,5px)}100%{transform:translate(5px,-2px)}}
 
-        /* 扫描线 */
-        .scanlines {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 2;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.2) 50%), 
-                        linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
-            background-size: 100% 3px, 3px 100%; pointer-events: none;
-        }
+/* SCANLINES */
+#scan{position:fixed;inset:0;background:repeating-linear-gradient(to bottom,transparent 0px,transparent 3px,rgba(0,0,0,.07) 3px,rgba(0,0,0,.07) 4px);pointer-events:none;z-index:8999}
 
-        /* 容器 */
-        #app {
-            position: relative; z-index: 10; width: 100%; height: 100%;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-        }
+/* WAVE */
+#waveCanvas{position:fixed;bottom:0;left:0;width:100%;height:110px;z-index:100;pointer-events:none;opacity:.65}
 
-        .screen {
-            display: none; width: 100%; max-width: 800px; padding: 2rem; box-sizing: border-box;
-            animation: fadeIn 1s ease forwards;
-        }
-        .screen.active { display: flex; flex-direction: column; }
+/* PAGE GLITCH */
+@keyframes pg{0%,100%{transform:none;filter:none}50%{transform:translateX(-2px) skewX(-.5deg);filter:hue-rotate(15deg)}75%{transform:translateX(2px)}}
+.glitching{animation:pg .12s ease-in-out}
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+/* KEYFRAMES */
+@keyframes fade-up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fade-in{from{opacity:0}to{opacity:1}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+@keyframes pulse-glow{0%,100%{text-shadow:0 0 6px var(--green-glow)}50%{text-shadow:0 0 20px var(--green-glow),0 0 40px var(--green-dim)}}
+@keyframes slide-right{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+@keyframes result-in{from{opacity:0;transform:scale(.96) translateY(18px)}to{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes calc-fill{from{width:0}to{width:100%}}
 
-        /* 文字样式 */
-        .mono { font-family: 'Space Mono', monospace; font-size: 0.85rem; letter-spacing: 2px; color: var(--phosphor-green); }
-        .text-glitch { position: relative; }
-        .text-glitch::after {
-            content: attr(data-text); position: absolute; left: 2px; text-shadow: -1px 0 #ff00c1;
-            top: 0; color: #fff; background: var(--bg-color); overflow: hidden; clip: rect(0,0,0,0);
-            animation: glitch 4s infinite linear alternate-reverse;
-        }
-        @keyframes glitch {
-            2% { clip: rect(10px, 999px, 20px, 0); }
-            4% { clip: rect(0, 0, 0, 0); }
-        }
+/* SCREENS */
+.screen{display:none;min-height:100vh}
+.screen.active{display:flex;flex-direction:column}
 
-        .intro-text { font-size: 1.15rem; line-height: 2; text-align: center; color: #9ca3af; }
-        .btn-initiate {
-            margin-top: 3rem; padding: 1rem 2rem; border: 1px solid var(--phosphor-green);
-            color: var(--phosphor-green); cursor: pointer; transition: all 0.3s;
-            background: transparent; align-self: center; outline: none;
-        }
-        .btn-initiate:hover { background: var(--phosphor-green); color: #000; box-shadow: 0 0 20px var(--phosphor-green); }
+/* ─── LANDING ─── */
+#screen-landing{justify-content:center;align-items:flex-start;padding:clamp(3rem,10vh,7rem) clamp(1.5rem,8vw,9rem) 8rem}
+.l-coord{font-family:var(--mono);font-size:.62rem;letter-spacing:.28em;color:var(--green);text-shadow:0 0 10px var(--green-glow);margin-bottom:3.5rem;opacity:0;animation:fade-up .9s ease .2s forwards}
+.l-cursor{display:inline-block;animation:blink 1s step-end infinite;color:var(--green)}
+.poem{max-width:560px;margin-bottom:4rem}
+.pl{font-size:clamp(.95rem,1.8vw,1.15rem);font-weight:300;line-height:2.1;color:var(--fg-dim);opacity:0;transform:translateY(10px)}
+.pl.bright{color:var(--fg-bright)}.pl.accent{color:var(--fg)}
+.pl:nth-child(1){animation:fade-up .7s ease .5s forwards}
+.pl:nth-child(2){animation:fade-up .7s ease .7s forwards}
+.pl:nth-child(3){animation:fade-up .7s ease .9s forwards}
+.pl:nth-child(4){animation:fade-up .7s ease 1.1s forwards}
+.pl:nth-child(5){animation:fade-up .7s ease 1.3s forwards}
+.pl:nth-child(6){animation:fade-up .7s ease 1.5s forwards}
+.pl.gap{height:1.4rem;opacity:1;transform:none;animation:none}
+.pl:nth-child(8){animation:fade-up .7s ease 1.9s forwards}
+.pl:nth-child(9){animation:fade-up .7s ease 2.1s forwards}
+.pl:nth-child(10){animation:fade-up .7s ease 2.3s forwards}
+.pl:nth-child(11){animation:fade-up .7s ease 2.5s forwards}
+.pl.gap2{height:1.4rem;opacity:1;transform:none;animation:none}
+.pl:nth-child(13){animation:fade-up .7s ease 2.9s forwards}
+.pl:nth-child(14){animation:fade-up .7s ease 3.1s forwards}
+.pl:nth-child(15){animation:fade-up .7s ease 3.3s forwards}
+.start-wrap{opacity:0;animation:fade-up .8s ease 3.7s forwards}
+.start-btn{display:inline-block;font-family:var(--mono);font-size:.72rem;letter-spacing:.2em;color:var(--bg);background:var(--green);border:none;padding:1rem 2.4rem;cursor:pointer;transition:transform .2s,box-shadow .2s;clip-path:polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,12px 100%,0 calc(100% - 12px))}
+.start-btn::before{content:'▶ ';opacity:.7}
+.start-btn:hover{transform:translateY(-2px);box-shadow:0 0 32px var(--green-glow),0 0 70px var(--green-dim),0 8px 24px rgba(0,0,0,.4)}
 
-        /* 问题页 */
-        .question-box { margin-bottom: 2.5rem; }
-        .question-text { font-size: 1.35rem; font-weight: 700; line-height: 1.7; margin-top: 1rem; color: #f3f4f6; }
-        .options-list { display: flex; flex-direction: column; gap: 1.2rem; }
-        .option-item {
-            padding: 1.2rem; border-left: 2px solid transparent; cursor: pointer;
-            transition: all 0.4s ease; color: #9ca3af; font-size: 1.05rem; line-height: 1.5;
-        }
-        .options-list:hover .option-item { opacity: 0.3; filter: blur(1px); }
-        .options-list .option-item:hover { 
-            opacity: 1; filter: blur(0); color: #fff; border-left: 2px solid var(--phosphor-green); 
-            padding-left: 1.8rem; background: rgba(255,255,255,0.03); transform: translateX(5px);
-        }
+/* ─── QUIZ ─── */
+#screen-quiz{align-items:center;padding:2rem 1.5rem 9rem}
+.q-header{width:100%;max-width:720px;display:flex;align-items:center;justify-content:space-between;margin-bottom:3rem;padding-top:clamp(1.5rem,5vh,3rem)}
+.q-signal{font-family:var(--mono);font-size:.6rem;letter-spacing:.22em;color:var(--green);text-shadow:0 0 8px var(--green-glow)}
+.q-bar{flex:1;height:1px;background:var(--fg-ghost);margin:0 1.5rem;overflow:hidden}
+.q-fill{height:100%;background:var(--green);box-shadow:0 0 6px var(--green-glow);transition:width .5s cubic-bezier(.16,1,.3,1);width:0%}
+.q-count{font-family:var(--mono);font-size:.6rem;letter-spacing:.15em;color:var(--fg-dim)}
+.q-body{width:100%;max-width:720px}
+.q-scenario-label{font-family:var(--mono);font-size:.58rem;letter-spacing:.25em;color:var(--fg-dim);margin-bottom:1.2rem;opacity:0;animation:fade-up .5s ease .05s forwards}
+.q-scenario{font-size:clamp(1rem,2vw,1.18rem);font-weight:300;line-height:1.85;color:var(--fg-bright);margin-bottom:3rem;opacity:0;animation:fade-up .5s ease .1s forwards;padding-left:1.2rem;border-left:1px solid var(--fg-ghost)}
+.opts{display:flex;flex-direction:column;gap:.9rem}
+.opt{display:flex;align-items:flex-start;gap:1rem;background:transparent;border:1px solid var(--fg-ghost);padding:1.2rem 1.4rem;cursor:pointer;text-align:left;color:var(--fg-dim);font-family:var(--serif);font-size:clamp(.88rem,1.6vw,1rem);line-height:1.7;transition:border-color .2s,color .2s,background .2s,transform .2s;position:relative;overflow:hidden;opacity:0;clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px))}
+.opt:nth-child(1){animation:slide-right .45s ease .18s forwards}
+.opt:nth-child(2){animation:slide-right .45s ease .26s forwards}
+.opt:nth-child(3){animation:slide-right .45s ease .34s forwards}
+.opt:nth-child(4){animation:slide-right .45s ease .42s forwards}
+.opt::before{content:'';position:absolute;inset:0;background:var(--green);transform:translateX(-101%);transition:transform .35s cubic-bezier(.16,1,.3,1);z-index:0;opacity:.06}
+.opt:hover::before{transform:translateX(0)}
+.opt:hover{border-color:var(--green);color:var(--fg-bright);transform:translateX(4px)}
+.opt>*{position:relative;z-index:1}
+.opt-l{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;color:var(--fg-ghost);padding-top:.25rem;min-width:1.4rem;transition:color .2s}
+.opt:hover .opt-l{color:var(--green)}
+.opt-t{flex:1}
 
-        /* 示波器 */
-        #oscilloscope {
-            position: fixed; bottom: 0; left: 0; width: 100%; height: 250px;
-            z-index: 5; pointer-events: none;
-        }
+/* ─── CALC ─── */
+#screen-calc{justify-content:center;align-items:center;min-height:100vh;text-align:center;gap:1.5rem}
+.calc-lbl{font-family:var(--mono);font-size:.65rem;letter-spacing:.3em;color:var(--green);text-shadow:0 0 10px var(--green-glow);animation:pulse-glow 1.5s ease-in-out infinite}
+.calc-lines{font-family:var(--mono);font-size:.58rem;letter-spacing:.12em;color:var(--fg-dim);line-height:2;text-align:left;white-space:pre}
+.calc-bar-bg{width:280px;height:1px;background:var(--fg-ghost);overflow:hidden}
+.calc-bar{height:100%;width:0;background:var(--green);box-shadow:0 0 8px var(--green-glow);animation:calc-fill 2.2s cubic-bezier(.16,1,.3,1) forwards}
 
-        /* 结果页 - 修复滚动条与展示问题 */
-        #screen-result { 
-            overflow-y: auto; height: 100vh; justify-content: flex-start; 
-            padding-top: 3rem; padding-bottom: 6rem; align-items: center;
-            -webkit-overflow-scrolling: touch; /* iOS 顺滑滚动 */
-        }
-        /* 隐藏滚动条但保留滚动功能 */
-        #screen-result::-webkit-scrollbar { width: 0; background: transparent; }
-        
-        .result-actions { margin-top: 2rem; display: flex; flex-direction: column; gap: 1rem; align-items: center; margin-bottom: 4rem; }
-        
-        #poster-img { 
-            width: 90%; max-width: 450px; border-radius: 6px; 
-            box-shadow: 0 0 40px rgba(0,0,0,0.6); display: block; margin: 0 auto;
-        }
-    </style>
+/* ─── RESULT ─── */
+#screen-result{align-items:center;padding:3rem 1.5rem 10rem}
+.r-wrap{width:100%;max-width:720px;animation:result-in .9s cubic-bezier(.16,1,.3,1) forwards}
+.r-coord{font-family:var(--mono);font-size:.58rem;letter-spacing:.22em;color:var(--planet-col,var(--cyan));margin-bottom:2.5rem;padding-bottom:1rem;border-bottom:1px solid rgba(var(--planet-rgb,56,189,248),.18)}
+.r-sub{font-family:var(--mono);font-size:.7rem;letter-spacing:.18em;color:var(--planet-col,var(--green));text-shadow:0 0 12px var(--planet-glow,var(--green-glow))}
+.chip{font-family:var(--mono);font-size:.55rem;letter-spacing:.15em;padding:.35rem .8rem;border:1px solid rgba(var(--planet-rgb,100,100,100),.25);color:rgba(var(--planet-rgb,180,180,200),.7);clip-path:polygon(0 0,calc(100% - 5px) 0,100% 5px,100% 100%,5px 100%,0 calc(100% - 5px))}
+.mystery{background:rgba(var(--planet-rgb,74,222,128),.04);border:1px solid rgba(var(--planet-rgb,74,222,128),.14);padding:1.8rem;font-size:.9rem;line-height:2.1;color:var(--fg-dim);white-space:pre-line;position:relative;margin-top:.5rem}
+.mystery::before{content:'"';position:absolute;top:.8rem;left:1.2rem;font-size:2rem;color:var(--planet-col,var(--green));opacity:.35;font-family:var(--serif);line-height:1}
+.dl-btn{display:block;width:100%;font-family:var(--mono);font-size:.65rem;letter-spacing:.2em;color:var(--bg);background:var(--planet-col,var(--cyan));border:none;padding:.9rem;cursor:pointer;text-align:center;transition:box-shadow .2s,transform .2s;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px))}
+.dl-btn:hover{box-shadow:0 0 24px var(--planet-glow,rgba(56,189,248,.4));transform:translateY(-1px)}
+.r-header{display:flex;align-items:flex-start;gap:2rem;margin-bottom:3rem}
+.r-orb{flex-shrink:0;width:100px;height:100px}
+.r-orb svg{width:100%;height:100%}
+.r-title{flex:1}
+.r-name{font-size:clamp(1.7rem,4vw,2.5rem);font-weight:300;letter-spacing:.06em;color:var(--fg-bright);line-height:1.2;margin-bottom:.4rem}
+/* merged into dynamic planet theme above */
+.r-sec{border-top:1px solid rgba(var(--planet-rgb,255,255,255),.07);padding:1.8rem 0}
+.r-sec-label{font-family:var(--mono);font-size:.55rem;letter-spacing:.25em;color:var(--fg-dim);margin-bottom:1rem}
+.r-text{font-size:.92rem;font-weight:300;line-height:2;color:var(--fg)}
+.r-text.bright{color:var(--fg-bright);font-size:.95rem;line-height:2.05}
+.nasa-text{color:var(--fg-dim);font-style:italic;font-size:.88rem;line-height:1.95;border-left:1px solid rgba(var(--planet-rgb,255,255,255),.12);padding-left:1.2rem}
+/* merged into dynamic planet theme above */
+/* merged into dynamic planet theme above */
+#radarCanvas{display:block;margin:0 auto}
+.dim-grid{display:grid;grid-template-columns:1fr 1fr;gap:.8rem 2rem;margin-top:1rem}
+.dim-row{display:flex;align-items:center;gap:.8rem}
+.dim-lbl{font-family:var(--mono);font-size:.5rem;letter-spacing:.1em;color:var(--fg-dim);min-width:5.5rem;white-space:nowrap}
+.dim-bg{flex:1;height:1px;background:var(--fg-ghost)}
+.dim-fill{height:100%;background:var(--planet-col,var(--cyan));box-shadow:0 0 5px var(--planet-glow,rgba(56,189,248,.4));transition:width 1.2s cubic-bezier(.16,1,.3,1);width:0%}
+.dim-val{font-family:var(--mono);font-size:.5rem;color:var(--fg-dim);min-width:1.6rem;text-align:right}
+.poster-sec{border-top:1px solid var(--fg-ghost);padding:1.8rem 0}
+.poster-preview{display:flex;justify-content:center;margin:1.2rem 0}
+#posterPreview{max-width:240px;width:100%;border:1px solid var(--fg-ghost);display:block}
+/* merged into dynamic planet theme above */
+.rs-btn{display:block;width:100%;font-family:var(--mono);font-size:.6rem;letter-spacing:.2em;color:var(--fg-dim);background:transparent;border:1px solid var(--fg-ghost);padding:.85rem;cursor:pointer;text-align:center;margin-top:.8rem;transition:color .2s,border-color .2s;clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px))}
+.rs-btn:hover{color:var(--fg);border-color:var(--fg-dim)}
+@media(max-width:520px){.r-header{flex-direction:column;gap:1rem}.dim-grid{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
-    <div class="cosmic-noise"></div>
-    <div class="scanlines"></div>
-    <canvas id="oscilloscope"></canvas>
 
-    <div id="app">
-        <!-- 首页 -->
-        <div id="screen-home" class="screen active">
-            <div class="intro-text">
-                NASA 发现了数千颗系外行星。<br>
-                有些过热，有些冰冷；<br>有些在宜居带边缘沉默运行；<br>
-                有些被重新定义，却仍然完整。<br><br>
-                我们不是单一的人格标签。<br>
-                我们是温度、轨道、大气、引力组成的行星系统。<br><br>
-                请不要选择你希望成为的自己。<br>
-                请选择你在深夜、疲惫、孤独时，<br>最接近的自己。
-            </div>
-            <button class="btn-initiate mono text-glitch" data-text="[ INITIATE SIGNAL ]" onclick="startTest()">[ INITIATE SIGNAL ]</button>
-        </div>
+<div id="noise"></div>
+<div id="scan"></div>
+<canvas id="waveCanvas"></canvas>
 
-        <!-- 答题页 -->
-        <div id="screen-question" class="screen">
-            <div class="mono" id="q-progress">SIGNAL 01/08</div>
-            <div class="question-box">
-                <div class="question-text" id="q-title"></div>
-            </div>
-            <div class="options-list" id="opt-list"></div>
-        </div>
+<!-- ══════════ SCREEN 1: LANDING ══════════ -->
+<section id="screen-landing" class="screen active">
+  <div class="l-coord">GRAVITY COLLAPSE // SIGNAL RECEIVING... <span class="l-cursor">█</span></div>
+  <div class="poem">
+    <p class="pl">NASA 发现了数千颗系外行星。</p>
+    <p class="pl">有些过热，有些冰冷；</p>
+    <p class="pl">有些在宜居带边缘沉默运行；</p>
+    <p class="pl">有些被自己的恒星缓慢吞噬；</p>
+    <p class="pl">有些拥有海洋，却藏在冰层之下；</p>
+    <p class="pl">有些被重新定义，却仍然完整。</p>
+    <div class="pl gap"></div>
+    <p class="pl accent">我们不是单一的人格标签。</p>
+    <p class="pl accent">我们是温度、轨道、大气、引力</p>
+    <p class="pl accent">和未知海洋组成的行星系统。</p>
+    <div class="pl gap2"></div>
+    <p class="pl bright">请不要选择你希望成为的自己。</p>
+    <p class="pl bright">请选择你在深夜、疲惫、孤独、</p>
+    <p class="pl bright">无人观看时，最接近的自己。</p>
+  </div>
+  <div class="start-wrap">
+    <button class="start-btn" id="btnStart">以宇宙尺度，看见自己</button>
+  </div>
+</section>
 
-        <!-- 计算页 -->
-        <div id="screen-calc" class="screen" style="align-items:center; justify-content:center;">
-            <div class="mono text-glitch" id="calc-status" data-text="DECODING ORBITAL SIGNATURE..." style="font-size: 1.1rem; text-align:center;">DECODING ORBITAL SIGNATURE...</div>
-        </div>
+<!-- ══════════ SCREEN 2: QUIZ ══════════ -->
+<section id="screen-quiz" class="screen">
+  <div class="q-header">
+    <span class="q-signal" id="sigLbl">SIGNAL 01 / 30</span>
+    <div class="q-bar"><div class="q-fill" id="qFill"></div></div>
+    <span class="q-count" id="qCount">01 / 30</span>
+  </div>
+  <div class="q-body" id="qBody"></div>
+</section>
 
-        <!-- 结果页 -->
-        <div id="screen-result" class="screen">
-            <div class="mono" style="margin-bottom:1.5rem; text-align:center; color: #6b7280;">[ 向下滚动查看 | 长按海报保存档案 ]</div>
-            <img id="poster-img" src="" alt="星际档案海报">
-            <div class="result-actions">
-                <button class="btn-initiate mono" onclick="location.reload()" style="margin-top:0;">[ RE-SCAN ]</button>
-            </div>
-        </div>
-    </div>
+<!-- ══════════ SCREEN 3: CALC ══════════ -->
+<section id="screen-calc" class="screen">
+  <div class="calc-lbl">ANALYZING GRAVITY FIELD...</div>
+  <div class="calc-lines" id="calcLines"></div>
+  <div class="calc-bar-bg"><div class="calc-bar"></div></div>
+  <div class="calc-lbl" style="font-size:.52rem;color:var(--fg-dim);animation:none;margin-top:.5rem" id="calcStatus">PROCESSING...</div>
+</section>
+
+<!-- ══════════ SCREEN 4: RESULT ══════════ -->
+<section id="screen-result" class="screen">
+  <div class="r-wrap" id="rWrap"></div>
+</section>
+
+<canvas id="posterCanvas" style="display:none"></canvas>
 
 <script>
-    // 数据注入
-    const PLANET_CONFIGS = {"TOI-700_d": {"color": "#4ade80", "secondary": "#064e3b", "name": "TOI-700 d", "title": "\u5b89\u9759\u5b9c\u5c45\u8005", "quote": "\u4f60\u4e0d\u662f\u51b0\u3002\u4f60\u53ea\u662f\u66fe\u7ecf\u9700\u8981\u51b0\u3002\u4eba\u4eec\u7ad9\u5728\u4f60\u7684\u8868\u9762\uff0c\u8bf4\u8fd9\u91cc\u5bd2\u51b7\uff0c\u5b89\u9759\uff0c\u6ca1\u6709\u751f\u547d\u3002\u4ed6\u4eec\u8bf4\u5f97\u5e76\u975e\u5168\u9519\u3002\u4ed6\u4eec\u53ea\u662f\u6ca1\u6709\u62b5\u8fbe\u8db3\u591f\u6df1\u7684\u5730\u65b9\u3002", "id": "TESS-700D", "dimensions": {"orbital_stability": 5.0, "internal_ocean": 3.0, "atmospheric_defense": 3.0, "stellar_attachment": 2.0, "absurdity_perception": 3.0, "sisyphean_resistance": 4.5, "value_alignment": 4.0}}, "Europa": {"color": "#38bdf8", "secondary": "#0c4a6e", "name": "Europa \u6728\u536b\u4e8c", "title": "\u51b0\u58f3\u6df1\u6d77\u4eba\u683c", "quote": "\u4f60\u5e76\u4e0d\u662f\u6ca1\u6709\u60c5\u611f\uff0c\u800c\u662f\u4f60\u7684\u60c5\u611f\u592a\u6df1\uff0c\u4ee5\u81f3\u4e8e\u4e0d\u80fd\u968f\u4fbf\u4ea4\u7ed9\u4e00\u4e2a\u4e0d\u61c2\u6df1\u5ea6\u7684\u4eba\u3002", "id": "JUP-II", "dimensions": {"orbital_stability": 3.0, "internal_ocean": 5.0, "atmospheric_defense": 5.0, "stellar_attachment": 2.0, "absurdity_perception": 3.0, "sisyphean_resistance": 4.0, "value_alignment": 3.5}}, "Enceladus": {"color": "#f8fafc", "secondary": "#475569", "name": "Enceladus \u571f\u536b\u4e8c", "title": "\u88c2\u7f1d\u55b7\u6cc9\u4eba\u683c", "quote": "\u88c2\u7f1d\u4e0d\u662f\u5931\u8d25\u3002\u6709\u65f6\uff0c\u90a3\u662f\u6df1\u5904\u4ecd\u6709\u6d77\u7684\u8bc1\u636e\u3002", "id": "SAT-II", "dimensions": {"orbital_stability": 3.0, "internal_ocean": 5.0, "atmospheric_defense": 3.0, "stellar_attachment": 2.5, "absurdity_perception": 4.0, "sisyphean_resistance": 5.0, "value_alignment": 4.5}}, "Pluto": {"color": "#94a3b8", "secondary": "#1e293b", "name": "Pluto \u51a5\u738b\u661f", "title": "\u8fb9\u7f18\u5b8c\u6574\u8005", "quote": "\u6709\u4e00\u5929\uff0c\u4e16\u754c\u6539\u53d8\u4e86\u4f60\u7684\u540d\u5b57\u3002\u4f60\u6ca1\u6709\u56e0\u6b64\u505c\u6b62\u8fd0\u884c\u3002\u8fd9\u5c31\u662f\u4f60\u7684\u5c0a\u4e25\u3002", "id": "DW-134340", "dimensions": {"orbital_stability": 3.0, "internal_ocean": 4.0, "atmospheric_defense": 4.0, "stellar_attachment": 1.5, "absurdity_perception": 5.0, "sisyphean_resistance": 4.0, "value_alignment": 5.0}}, "55_Cancri_e": {"color": "#c084fc", "secondary": "#581c87", "name": "55 Cancri e", "title": "\u9ad8\u538b\u94bb\u77f3\u4eba\u683c", "quote": "\u4eba\u4e0d\u80fd\u6c38\u8fdc\u628a\u82e6\u96be\u5f53\u6210\u77ff\u5e8a\u3002\u603b\u6709\u4e00\u5929\uff0c\u4f60\u8981\u5b66\u4f1a\u5728\u6ca1\u6709\u538b\u8feb\u7684\u5730\u65b9\uff0c\u4ecd\u7136\u5141\u8bb8\u81ea\u5df1\u73cd\u8d35\u3002", "id": "DIAMOND-55", "dimensions": {"orbital_stability": 5.0, "internal_ocean": 3.0, "atmospheric_defense": 4.5, "stellar_attachment": 4.0, "absurdity_perception": 3.0, "sisyphean_resistance": 4.5, "value_alignment": 5.0}}, "HD_189733_b": {"color": "#2563eb", "secondary": "#1e3a8a", "name": "HD 189733 b", "title": "\u84dd\u8272\u98ce\u66b4\u4eba\u683c", "quote": "\u4eba\u4eec\u603b\u662f\u76f8\u4fe1\u84dd\u8272\u610f\u5473\u7740\u6d77\u3002\u4ed6\u4eec\u5fd8\u4e86\uff0c\u5b87\u5b99\u4ece\u4e0d\u627f\u8bfa\u989c\u8272\u7684\u542b\u4e49\u3002", "id": "EXO-189", "dimensions": {"orbital_stability": 2.0, "internal_ocean": 5.0, "atmospheric_defense": 5.0, "stellar_attachment": 3.0, "absurdity_perception": 4.5, "sisyphean_resistance": 3.0, "value_alignment": 3.5}}, "WASP-12b": {"color": "#fb923c", "secondary": "#7c2d12", "name": "WASP-12b", "title": "\u88ab\u541e\u566c\u7684\u70ed\u70c8\u8005", "quote": "\u4e0d\u662f\u6240\u6709\u5149\u90fd\u503c\u5f97\u9760\u8fd1\u3002\u6709\u4e9b\u5149\u53ea\u662f\u5728\u7ec3\u4e60\u541e\u566c\u3002", "id": "HOT-JUP-12", "dimensions": {"orbital_stability": 1.5, "internal_ocean": 4.0, "atmospheric_defense": 2.0, "stellar_attachment": 5.0, "absurdity_perception": 3.5, "sisyphean_resistance": 2.5, "value_alignment": 2.5}}, "K2-18_b": {"color": "#2dd4bf", "secondary": "#134e4a", "name": "K2-18 b", "title": "\u6df1\u6d77\u672a\u77e5\u8005", "quote": "\u88ab\u770b\u89c1\u7684\u4ece\u6765\u4e0d\u662f\u6d77\uff0c\u53ea\u662f\u6d77\u8bd5\u56fe\u62b5\u8fbe\u5929\u7a7a\u7684\u8bc1\u636e\u3002", "id": "K2-18-B", "dimensions": {"orbital_stability": 3.0, "internal_ocean": 5.0, "atmospheric_defense": 4.0, "stellar_attachment": 2.5, "absurdity_perception": 4.0, "sisyphean_resistance": 3.5, "value_alignment": 4.0}}, "Titan": {"color": "#fbbf24", "secondary": "#78350f", "name": "Titan \u571f\u536b\u516d", "title": "\u5f02\u4e16\u754c\u5927\u6c14\u4eba\u683c", "quote": "\u964c\u751f\u4e0d\u662f\u9519\u8bef\u3002\u4e0d\u540c\u4e5f\u4e0d\u662f\u5931\u8d25\u3002\u4f60\u53ef\u4ee5\u62e5\u6709\u81ea\u5df1\u7684\u5929\u6c14\uff0c\u81ea\u5df1\u7684\u6e56\u6cca\uff0c\u81ea\u5df1\u7684\u591c\u665a\u3002", "id": "SAT-VI", "dimensions": {"orbital_stability": 3.5, "internal_ocean": 4.0, "atmospheric_defense": 5.0, "stellar_attachment": 1.5, "absurdity_perception": 4.5, "sisyphean_resistance": 4.0, "value_alignment": 5.0}}, "Proxima_Centauri_b": {"color": "#f472b6", "secondary": "#831843", "name": "Proxima Centauri b", "title": "\u6700\u8fd1\u7684\u5b64\u72ec\u8005", "quote": "\u8ddd\u79bb\u4e0d\u662f\u7528\u5149\u5e74\u6765\u8ba1\u7b97\u7684\u3002\u6709\u4e9b\u4eba\u5750\u5728\u4f60\u8eab\u8fb9\uff0c\u5374\u4ecd\u50cf\u53e6\u4e00\u9897\u661f\u3002", "id": "PROX-B", "dimensions": {"orbital_stability": 3.0, "internal_ocean": 4.5, "atmospheric_defense": 4.0, "stellar_attachment": 4.0, "absurdity_perception": 4.0, "sisyphean_resistance": 3.0, "value_alignment": 3.5}}, "Kepler-452b": {"color": "#84cc16", "secondary": "#365314", "name": "Kepler-452b", "title": "\u65e7\u5730\u7403\u7ee7\u627f\u8005", "quote": "\u4f60\u4e0d\u662f\u8001\u53bb\u5f97\u592a\u5feb\u3002\u4f60\u53ea\u662f\u592a\u65e9\u5b66\u4f1a\u4e86\u66ff\u4e16\u754c\u627f\u62c5\u91cd\u91cf\u3002", "id": "KEP-452", "dimensions": {"orbital_stability": 5.0, "internal_ocean": 3.0, "atmospheric_defense": 3.0, "stellar_attachment": 3.0, "absurdity_perception": 3.0, "sisyphean_resistance": 4.5, "value_alignment": 4.5}}, "GJ_1214_b": {"color": "#64748b", "secondary": "#0f172a", "name": "GJ 1214 b", "title": "\u96fe\u5c42\u4fdd\u62a4\u8005", "quote": "\u6709\u65f6\uff0c\u4e0d\u88ab\u770b\u6e05\u4e0d\u662f\u9003\u907f\uff0c\u800c\u662f\u4fdd\u5b58\u3002\u4f60\u4e0d\u9700\u8981\u5411\u6240\u6709\u4eba\u6563\u53bb\u5927\u6c14\u3002\u900f\u660e\u4e0d\u662f\u552f\u4e00\u7684\u8bda\u5b9e\u3002", "id": "GJ-1214", "dimensions": {"orbital_stability": 3.0, "internal_ocean": 4.5, "atmospheric_defense": 5.0, "stellar_attachment": 2.0, "absurdity_perception": 3.5, "sisyphean_resistance": 3.5, "value_alignment": 4.0}}};
-    const QUESTIONS = [{"id": "Q1", "q": "\u51cc\u6668\u4e09\u70b9\uff0c\u4f60\u88ab\u4e00\u9635\u6781\u5176\u89c4\u5f8b\u3001\u4f46\u6beb\u65e0\u610f\u4e49\u7684\u6ef4\u6c34\u58f0\u5435\u9192\u3002\u660e\u5929\u8fd8\u6709\u91cd\u8981\u7684\u4e8b\u3002", "opts": [{"t": "\u7acb\u5373\u8d77\u5e8a\uff0c\u627e\u5230\u58f0\u6e90\u5f7b\u5e95\u62e7\u7d27\uff0c\u7136\u540e\u5f3a\u8feb\u81ea\u5df1\u8fc5\u901f\u91cd\u65b0\u8fdb\u5165\u7761\u7720\u8f68\u9053\u3002", "w": {"orbital_stability": 3}}, {"t": "\u8eba\u5728\u9ed1\u6697\u91cc\u542c\u7740\u90a3\u4e2a\u58f0\u97f3\uff0c\u8111\u6d77\u5f00\u59cb\u65e0\u8fb9\u65e0\u9645\u5730\u6f2b\u6e38\uff0c\u751a\u81f3\u5fd8\u8bb0\u4e86\u660e\u5929\u7684\u7126\u8651\u3002", "w": {"internal_ocean": 3}}, {"t": "\u6234\u4e0a\u964d\u566a\u8033\u673a\uff0c\u95ed\u4e0a\u773c\u775b\uff0c\u7528\u7269\u7406\u624b\u6bb5\u5c06\u81ea\u5df1\u4e0e\u5916\u754c\u7684\u5e72\u6270\u5f7b\u5e95\u9694\u7edd\u3002", "w": {"atmospheric_defense": 3}}, {"t": "\u611f\u5230\u4e00\u9635\u83ab\u540d\u7684\u70e6\u8e81\u6216\u5174\u594b\uff0c\u5e72\u8106\u8d77\u5e8a\u4e0d\u518d\u7761\u4e86\uff0c\u4e3b\u52a8\u6253\u788e\u8fd9\u65e0\u804a\u7684\u7761\u7720\u8282\u5f8b\u3002", "w": {"orbital_stability": -2, "absurdity_perception": 2}}]}, {"id": "Q2", "q": "\u907f\u96e8\u65f6\uff0c\u4f60\u76ef\u7740\u4fbf\u5229\u5e97\u91cc\u90a3\u53f0\u6beb\u65e0\u610f\u4e49\u3001\u7f13\u6162\u65cb\u8f6c\u7684\u70e4\u80a0\u673a\u770b\u4e86\u6574\u6574\u5341\u5206\u949f\u3002", "opts": [{"t": "\u89c9\u5f97\u5b9e\u5728\u592a\u65e0\u804a\u4e86\uff0c\u7acb\u523b\u62ff\u51fa\u624b\u673a\u5bfb\u627e\u5176\u4ed6\u523a\u6fc0\u6216\u4fe1\u606f\u6765\u586b\u8865\u7a7a\u767d\u3002", "w": {"internal_ocean": -2, "orbital_stability": 1}}, {"t": "\u770b\u7740\u90a3\u7f13\u6162\u7684\u65cb\u8f6c\uff0c\u7a81\u7136\u9677\u5165\u4e00\u79cd\u5e9e\u5927\u7684\u3001\u5173\u4e8e\u65f6\u95f4\u6d41\u901d\u7684\u60b2\u4f24\u6216\u865a\u65e0\u91cc\u3002", "w": {"internal_ocean": 3, "absurdity_perception": 2}}, {"t": "\u89c9\u5f97\u8fd9\u6839\u70e4\u80a0\u5728\u67d0\u79cd\u7a0b\u5ea6\u4e0a\u548c\u81ea\u5df1\u5f88\u50cf\uff0c\u5728\u65e0\u4eba\u5728\u610f\u7684\u89d2\u843d\u6301\u7eed\u4e14\u5b64\u72ec\u5730\u8fd0\u884c\u7740\u3002", "w": {"value_alignment": 2, "absurdity_perception": 2}}, {"t": "\u5f00\u59cb\u5728\u8111\u6d77\u91cc\u8bc4\u5224\u8fd9\u53f0\u673a\u5668\u7684\u8fd0\u8f6c\u6548\u7387\uff0c\u6216\u8005\u601d\u8003\u5b83\u4e3a\u4f55\u5728\u6ca1\u5ba2\u4eba\u65f6\u8fd8\u8981\u5f00\u7740\u3002", "w": {"orbital_stability": 3}}]}, {"id": "Q3", "q": "\u4e58\u5750\u6f2b\u957f\u7684\u7a7a\u7535\u68af\u65f6\uff0c\u65c1\u8fb9\u4e00\u4e2a\u964c\u751f\u4eba\u7a81\u7136\u95ee\u4f60\uff1a\u201c\u4f60\u89c9\u5f97\u9e1f\u4f1a\u540e\u6094\u98de\u7fd4\u5417\uff1f\u201d", "opts": [{"t": "\u8ba4\u771f\u601d\u8003\u4e86\u4e00\u79d2\uff0c\u7136\u540e\u5411\u4ed6\u5c55\u9732\u4e86\u4f60\u771f\u5b9e\u7684\u3001\u6216\u8bb8\u6709\u4e9b\u8106\u5f31\u7684\u7b54\u6848\u3002", "w": {"atmospheric_defense": -3}}, {"t": "\u793c\u8c8c\u5730\u7b11\u4e86\u4e00\u4e0b\uff0c\u7ed9\u51fa\u4e00\u4e2a\u6ef4\u6c34\u4e0d\u6f0f\u3001\u7b26\u5408\u793e\u4ea4\u89c4\u8303\u7684\u6577\u884d\u56de\u7b54\u3002", "w": {"atmospheric_defense": 2, "orbital_stability": 1}}, {"t": "\u5047\u88c5\u6ca1\u542c\u89c1\uff0c\u6216\u8005\u4f4e\u5934\u770b\u624b\u673a\uff0c\u7528\u7edd\u5bf9\u7684\u6c89\u9ed8\u62d2\u7edd\u8fd9\u79cd\u7a81\u5982\u5176\u6765\u7684\u8bd5\u63a2\u3002", "w": {"atmospheric_defense": 3}}, {"t": "\u6beb\u4e0d\u9000\u7f29\u5730\u76ef\u7740\u4ed6\uff0c\u7528\u53e6\u4e00\u4e2a\u66f4\u8352\u8c2c\u7684\u95ee\u9898\u53cd\u95ee\uff0c\u628a\u5c40\u9762\u7684\u5931\u63a7\u611f\u63a8\u56de\u53bb\u3002", "w": {"atmospheric_defense": 2, "sisyphean_resistance": 2}}]}, {"id": "Q4", "q": "\u8d70\u5728\u6781\u5176\u5e73\u5eb8\u7684\u8857\u4e0a\uff0c\u4f60\u770b\u5230\u5730\u7f1d\u91cc\u5361\u7740\u4e00\u5757\u53cd\u5c04\u7740\u5947\u7279\u5149\u8292\u3001\u4f46\u6beb\u65e0\u7528\u5904\u7684\u73bb\u7483\u788e\u7247\u3002", "opts": [{"t": "\u53ea\u662f\u770b\u4e86\u4e00\u773c\u4fbf\u7ee7\u7eed\u8d70\u3002\u6ca1\u6709\u5b9e\u9645\u610f\u4e49\u7684\u4e1c\u897f\u4e0d\u503c\u5f97\u505c\u7559\u3002", "w": {"stellar_attachment": -3, "orbital_stability": 1}}, {"t": "\u628a\u5b83\u6361\u56de\u5bb6\uff0c\u5728\u63a5\u4e0b\u6765\u7684\u51e0\u5929\u91cc\u9891\u7e41\u5730\u6ce8\u89c6\u5b83\uff0c\u751a\u81f3\u8d4b\u4e88\u5b83\u67d0\u79cd\u9690\u79d8\u7684\u610f\u4e49\u3002", "w": {"stellar_attachment": 3}}, {"t": "\u505c\u4e0b\u6765\u5728\u5b83\u65c1\u8fb9\u7ad9\u4e00\u4f1a\u513f\uff0c\u786e\u8ba4\u5b83\u5b58\u5728\u8fc7\uff0c\u7136\u540e\u72ec\u81ea\u79bb\u5f00\u3002", "w": {"value_alignment": 2, "atmospheric_defense": 1}}, {"t": "\u628a\u5b83\u6361\u8d77\u6b7b\u6b7b\u6525\u5728\u624b\u5fc3\uff0c\u54ea\u6015\u8fb9\u7f18\u6781\u5176\u950b\u5229\u5212\u75db\u4e86\u76ae\u80a4\uff0c\u4e5f\u89c9\u5f97\u6709\u4e00\u79cd\u771f\u5b9e\u611f\u3002", "w": {"stellar_attachment": 3, "sisyphean_resistance": 1}}]}, {"id": "Q5", "q": "\u4f60\u82b1\u4e86\u5f88\u4e45\u6392\u597d\u4e00\u6392\u591a\u7c73\u8bfa\u9aa8\u724c\u3002\u521a\u6392\u5b8c\uff0c\u4e00\u9635\u65e0\u540d\u98ce\u5439\u6765\uff0c\u9aa8\u724c\u77ac\u95f4\u5168\u5012\uff0c\u4e14\u65e0\u4eba\u770b\u89c1\u3002", "opts": [{"t": "\u611f\u5230\u975e\u5e38\u6124\u6012\u548c\u632b\u8d25\uff0c\u89c9\u5f97\u81ea\u5df1\u7684\u5fc3\u8840\u548c\u65f6\u95f4\u88ab\u5f7b\u5e95\u6bc1\u4e86\u3002", "w": {"absurdity_perception": -2}}, {"t": "\u7ad9\u5728\u539f\u5730\uff0c\u89c9\u5f97\u8fd9\u79cd\u201c\u4e00\u5207\u77ac\u95f4\u6e05\u96f6\u201d\u7684\u753b\u9762\u6709\u4e00\u79cd\u6ed1\u7a3d\u7684\u5bbf\u547d\u611f\uff0c\u751a\u81f3\u60f3\u7b11\u3002", "w": {"absurdity_perception": 3}}, {"t": "\u89c9\u5f97\u8fd9\u624d\u662f\u4e16\u754c\u7684\u5e38\u6001\u3002\u4ec0\u4e48\u90fd\u6ca1\u7559\u4e0b\uff0c\u53cd\u800c\u8ba9\u4eba\u611f\u5230\u4e00\u79cd\u4e0d\u7528\u5411\u8c01\u4ea4\u4ee3\u7684\u8f7b\u677e\u3002", "w": {"absurdity_perception": 3, "stellar_attachment": -2}}, {"t": "\u6ca1\u4ec0\u4e48\u592a\u5927\u7684\u60c5\u7eea\u6ce2\u52a8\uff0c\u53ea\u662f\u9ed8\u9ed8\u5730\u8e72\u4e0b\u6765\uff0c\u51c6\u5907\u91cd\u65b0\u518d\u6392\u4e00\u6b21\u3002", "w": {"sisyphean_resistance": 3, "orbital_stability": 2}}]}, {"id": "Q6", "q": "\u4f60\u8fde\u7eed\u51e0\u5929\u505a\u540c\u4e00\u4e2a\u68a6\uff1a\u68a6\u91cc\u4f60\u4e00\u76f4\u5728\u4e00\u6761\u957f\u957f\u7684\u8d70\u5eca\u91cc\u627e\u4e00\u6247\u4e0d\u5b58\u5728\u7684\u95e8\u3002", "opts": [{"t": "\u9192\u6765\u540e\u8bb0\u5f55\u4e0b\u68a6\u5883\uff0c\u5206\u6790\u81ea\u5df1\u6700\u8fd1\u7684\u538b\u529b\u6e90\uff0c\u5e76\u5c1d\u8bd5\u5728\u73b0\u5b9e\u4e2d\u5bfb\u627e\u89e3\u51b3\u7126\u8651\u7684\u529e\u6cd5\u3002", "w": {"orbital_stability": 3}}, {"t": "\u89c9\u5f97\u8fd9\u4e2a\u68a6\u662f\u67d0\u79cd\u6df1\u523b\u7684\u6f5c\u610f\u8bc6\u9690\u55bb\uff0c\u6697\u793a\u4f60\u7684\u4eba\u751f\u6c38\u8fdc\u88ab\u56f0\u5728\u5bfb\u627e\u610f\u4e49\u7684\u8d70\u5eca\u91cc\u3002", "w": {"absurdity_perception": 3, "internal_ocean": 2}}, {"t": "\u5f3a\u8feb\u81ea\u5df1\u5728\u7761\u524d\u4e0d\u53bb\u60f3\u5b83\uff0c\u751a\u81f3\u5403\u892a\u9ed1\u7d20\u3002\u4f60\u8ba8\u538c\u8fd9\u79cd\u8fde\u68a6\u5883\u90fd\u65e0\u6cd5\u9632\u5fa1\u7684\u5931\u63a7\u611f\u3002", "w": {"atmospheric_defense": 3}}, {"t": "\u5728\u4e0b\u4e00\u6b21\u505a\u68a6\u65f6\uff0c\u8bd5\u56fe\u5728\u68a6\u91cc\u7838\u788e\u8d70\u5eca\u7684\u5899\u58c1\uff0c\u5f3a\u884c\u7528\u610f\u8bc6\u63a5\u7ba1\u68a6\u5883\u7684\u8d70\u5411\u3002", "w": {"sisyphean_resistance": 3}}]}, {"id": "Q7", "q": "\u6536\u5230\u5feb\u9012\u540e\uff0c\u4f60\u624b\u91cc\u62ff\u7740\u4e00\u5f20\u7528\u4e8e\u7f13\u51b2\u7684\u6c14\u6ce1\u7eb8\u3002", "opts": [{"t": "\u628a\u5b83\u5e73\u6574\u5730\u6298\u53e0\u597d\uff0c\u6536\u8fdb\u5e9f\u54c1\u7bb1\uff0c\u4fdd\u6301\u684c\u9762\u7684\u7edd\u5bf9\u6574\u6d01\u548c\u79e9\u5e8f\u3002", "w": {"orbital_stability": 3}}, {"t": "\u634f\u7834\u4e00\u4e2a\u6c14\u6ce1\u3002\u542c\u7740\u201c\u556a\u201d\u7684\u4e00\u58f0\uff0c\u89c9\u5f97\u77ed\u6682\u7684\u7834\u574f\u6b32\u662f\u586b\u8865\u5185\u5fc3\u7a7a\u865a\u7684\u5fae\u5c0f\u5b89\u6170\u3002", "w": {"internal_ocean": 2, "absurdity_perception": 1}}, {"t": "\u5b8c\u6574\u5730\u6254\u6389\u5b83\u3002\u4f60\u4e0d\u559c\u6b22\u5236\u9020\u51fa\u4efb\u4f55\u7ec6\u788e\u7684\u3001\u4e0d\u5fc5\u8981\u7684\u566a\u97f3\u6765\u66b4\u9732\u81ea\u5df1\u7684\u5b58\u5728\u3002", "w": {"atmospheric_defense": 3}}, {"t": "\u7528\u529b\u62e7\u6210\u4e00\u56e2\uff0c\u8ba9\u6240\u6709\u7684\u6c14\u6ce1\u5728\u540c\u4e00\u79d2\u949f\u5bc6\u96c6\u5730\u7206\u88c2\uff0c\u4eab\u53d7\u6beb\u65e0\u610f\u4e49\u7684\u72c2\u6b22\u3002", "w": {"absurdity_perception": 3, "sisyphean_resistance": 1}}]}, {"id": "Q8", "q": "\u5728\u4e00\u5bb6\u5608\u6742\u7684\u5feb\u9910\u5385\uff0c\u5468\u56f4\u7a81\u7136\u56e0\u4e3a\u67d0\u79cd\u5de7\u5408\uff0c\u9677\u5165\u4e86\u957f\u8fbe\u4e94\u79d2\u949f\u7684\u7edd\u5bf9\u6b7b\u5bc2\u3002", "opts": [{"t": "\u8d81\u7740\u5b89\u9759\uff0c\u5feb\u901f\u4e14\u4e13\u6ce8\u5730\u5403\u5b8c\u6700\u540e\u51e0\u53e3\u996d\uff0c\u51c6\u5907\u8d76\u8d74\u4e0b\u4e00\u4e2a\u65e5\u7a0b\u3002", "w": {"orbital_stability": 3}}, {"t": "\u611f\u53d7\u7740\u8fd9\u7a81\u5982\u5176\u6765\u7684\u5bc2\u9759\uff0c\u89c9\u5f97\u8fd9\u624d\u662f\u4e16\u754c\u9732\u51fa\u7684\u4ee4\u4eba\u6218\u6817\u7684\u771f\u5b9e\u5e95\u7247\u3002", "w": {"absurdity_perception": 3, "internal_ocean": 2}}, {"t": "\u611f\u5230\u6781\u5ea6\u5c34\u5c2c\uff0c\u7acb\u523b\u4f4e\u4e0b\u5934\u5047\u88c5\u770b\u624b\u673a\uff0c\u751f\u6015\u81ea\u5df1\u5480\u56bc\u7684\u58f0\u97f3\u6253\u7834\u8be1\u5f02\u7684\u5b81\u9759\u3002", "w": {"atmospheric_defense": 3}}, {"t": "\u6545\u610f\u91cd\u91cd\u5730\u653e\u4e0b\u624b\u91cc\u7684\u6c34\u676f\uff0c\u7528\u4e00\u58f0\u6e05\u8106\u7684\u201c\u5f53\u201d\u58f0\uff0c\u4e3b\u52a8\u51fb\u788e\u8fd9\u79cd\u8ba9\u4eba\u53d1\u75af\u7684\u6c89\u9ed8\u3002", "w": {"sisyphean_resistance": 3, "value_alignment": 2}}]}];
+/* ══════════════════════════════════
+   OSCILLOSCOPE
+══════════════════════════════════ */
+const wc=document.getElementById('waveCanvas'),wCtx=wc.getContext('2d');
+let wOff=0,tAmp=12,cAmp=12;
+const bAmp=12,bFreq=.014;
+function rzWave(){wc.width=window.innerWidth;wc.height=110}
+window.addEventListener('resize',rzWave);rzWave();
+function animWave(){
+  wCtx.clearRect(0,0,wc.width,wc.height);
+  cAmp+=(tAmp-cAmp)*.07;
+  if(tAmp>bAmp)tAmp-=.45;if(tAmp<bAmp)tAmp=bAmp;
+  wCtx.beginPath();
+  wCtx.strokeStyle='rgba(74,222,128,.60)';wCtx.lineWidth=1.4;
+  wCtx.shadowBlur=5;wCtx.shadowColor='#4ade80';
+  const cy=wc.height/2;
+  for(let x=0;x<wc.width;x++){
+    const noise=(Math.random()-.5)*1.2;
+    const y=cy+Math.sin(x*bFreq+wOff)*cAmp+noise;
+    x===0?wCtx.moveTo(x,y):wCtx.lineTo(x,y);
+  }
+  wCtx.stroke();wOff+=.038;requestAnimationFrame(animWave);
+}
+animWave();
+function triggerInterference(){
+  tAmp=68;
+  document.body.classList.add('glitching');
+  setTimeout(()=>document.body.classList.remove('glitching'),130);
+}
 
-    let currentQ = 0;
-    let scores = { orbital_stability: 0, internal_ocean: 0, atmospheric_defense: 0, stellar_attachment: 0, absurdity_perception: 0, sisyphean_resistance: 0, value_alignment: 0 };
+/* ══════════════════════════════════
+   DATA: QUESTIONS
+══════════════════════════════════ */
+const QUESTIONS=[
+  {id:'Q1',scenario:'凌晨三点，你被一阵极其规律、但毫无意义的滴水声吵醒。明天还有重要的事。',options:[
+    {id:'A',text:'立即起床，找到声源彻底拧紧，然后强迫自己迅速重新进入睡眠轨道。',w:{orbital_stability:3}},
+    {id:'B',text:'躺在黑暗里听着那个声音，脑海开始无边无际地漫游，甚至忘记了明天的焦虑。',w:{internal_ocean:3}},
+    {id:'C',text:'戴上降噪耳机，闭上眼睛，用物理手段将自己与外界的干扰彻底隔绝。',w:{atmospheric_defense:3}},
+    {id:'D',text:'感到一阵莫名的烦躁或兴奋，干脆起床不再睡了，主动打碎这无聊的睡眠节律。',w:{orbital_stability:-2,absurdity_perception:2}}
+  ]},
+  {id:'Q2',scenario:'避雨时，你盯着便利店里那台毫无意义、缓慢旋转的烤肠机看了整整十分钟。',options:[
+    {id:'A',text:'觉得实在太无聊了，立刻拿出手机寻找其他刺激或信息来填补空白。',w:{internal_ocean:-2,orbital_stability:1}},
+    {id:'B',text:'看着那缓慢的旋转，突然陷入一种庞大的、关于时间流逝的悲伤或虚无里。',w:{internal_ocean:3,absurdity_perception:2}},
+    {id:'C',text:'觉得这根烤肠在某种程度上和自己很像，在无人在意的角落持续且孤独地运行着。',w:{value_alignment:2,absurdity_perception:2}},
+    {id:'D',text:'开始在脑海里评判这台机器的运转效率，或者思考它为何在没客人时还要开着。',w:{orbital_stability:3}}
+  ]},
+  {id:'Q3',scenario:'乘坐漫长的空电梯时，旁边一个陌生人突然问你："你觉得鸟会后悔飞翔吗？"',options:[
+    {id:'A',text:'认真思考了一秒，然后向他展露了你真实的、或许有些脆弱的答案。',w:{atmospheric_defense:-3}},
+    {id:'B',text:'礼貌地笑了一下，给出一个滴水不漏、符合社交规范的敷衍回答。',w:{atmospheric_defense:2,orbital_stability:1}},
+    {id:'C',text:'假装没听见，或者低头看手机，用绝对的沉默拒绝这种突如其来的试探。',w:{atmospheric_defense:3}},
+    {id:'D',text:'毫不退缩地盯着他，用另一个更荒谬的问题反问，把局面的失控感推回去。',w:{atmospheric_defense:2,sisyphean_resistance:2}}
+  ]},
+  {id:'Q4',scenario:'走在极其平庸的街上，你看到地缝里卡着一块反射着奇特光芒、但毫无用处的玻璃碎片。',options:[
+    {id:'A',text:'只是看了一眼便继续走。没有实际意义的东西不值得停留。',w:{stellar_attachment:-3,orbital_stability:1}},
+    {id:'B',text:'把它捡回家，在接下来的几天里频繁地注视它，甚至赋予它某种隐秘的意义。',w:{stellar_attachment:3}},
+    {id:'C',text:'停下来在它旁边站一会儿，确认它存在过，然后独自离开。',w:{value_alignment:2,atmospheric_defense:1}},
+    {id:'D',text:'把它捡起死死攥在手心，哪怕边缘极其锋利划痛了皮肤，也觉得有一种真实感。',w:{stellar_attachment:3,sisyphean_resistance:1}}
+  ]},
+  {id:'Q5',scenario:'你花了很久排好一排多米诺骨牌。刚排完，一阵无名风吹来，骨牌瞬间全倒，且无人看见。',options:[
+    {id:'A',text:'感到非常愤怒和挫败，觉得自己的心血和时间被彻底毁了。',w:{absurdity_perception:-2}},
+    {id:'B',text:'站在原地，觉得这种"一切瞬间清零"的画面有一种滑稽的宿命感，甚至想笑。',w:{absurdity_perception:3}},
+    {id:'C',text:'觉得这才是世界的常态。什么都没留下，反而让人感到一种不用向谁交代的轻松。',w:{absurdity_perception:3,stellar_attachment:-2}},
+    {id:'D',text:'没什么太大的情绪波动，只是默默地蹲下来，准备重新再排一次。',w:{sisyphean_resistance:3,orbital_stability:2}}
+  ]},
+  {id:'Q6',scenario:'你被强制分派了一项绝对无意义的任务：把一千个回形针全部掰直。没有任何报酬和监督。',options:[
+    {id:'A',text:'既然必须做，我就会建立一套极其精确的高效流程，用行动本身建立尊严。',w:{sisyphean_resistance:2,orbital_stability:2}},
+    {id:'B',text:'我会把掰直的回形针编织成一个奇怪的艺术品，用我的方式嘲弄这个任务。',w:{sisyphean_resistance:3,value_alignment:2}},
+    {id:'C',text:'随便敷衍了事或者直接躺平。没有意义的事情绝对不值得消耗生命。',w:{sisyphean_resistance:-3}},
+    {id:'D',text:'不断加快掰直的速度，测试自己在枯燥极限下的忍耐力，把折磨变成试炼。',w:{sisyphean_resistance:3,atmospheric_defense:1}}
+  ]},
+  {id:'Q7',scenario:'在一个当代艺术展上，周围所有人都在对着墙上一个空无一物的相框疯狂鼓掌。',options:[
+    {id:'A',text:'为了不显得突兀，你也跟着鼓掌，假装自己也看懂了什么。',w:{value_alignment:-3}},
+    {id:'B',text:'感到无法忍受这种集体的虚伪，立刻转身离开这个房间。',w:{value_alignment:3}},
+    {id:'C',text:'不离开也不鼓掌。你只是站在那里，在脑海里给空相框画上了属于你自己的画面。',w:{value_alignment:3,internal_ocean:2}},
+    {id:'D',text:'退到最角落冷眼旁观，觉得人类的行为比那个空相框更加荒诞。',w:{value_alignment:2,absurdity_perception:2}}
+  ]},
+  {id:'Q8',scenario:'凌晨空无一人的十字路口，红灯还有漫长的 90 秒。',options:[
+    {id:'A',text:'站在原地耐心等待，维持规则本身就是一种内心的秩序。',w:{orbital_stability:3}},
+    {id:'B',text:'左右看了一眼直接走过去，没有车的时候，规则就是一串毫无意义的数字。',w:{orbital_stability:-3,value_alignment:1}},
+    {id:'C',text:'看着跳动的红灯发呆，突然觉得这种被机械控制的停滞状态非常有隐喻感。',w:{absurdity_perception:3}},
+    {id:'D',text:'走到马路中间又停下，享受这种随时可能破坏规则、但又没有完全破坏的边缘感。',w:{atmospheric_defense:2,absurdity_perception:2}}
+  ]},
+  {id:'Q9',scenario:'你的电脑突然卡死，屏幕定格在一个正在张嘴大笑的人脸静止帧上。',options:[
+    {id:'A',text:'感到极其暴躁，疯狂点击鼠标，试图用暴力干预夺回控制权。',w:{orbital_stability:-2}},
+    {id:'B',text:'看着那张定格的笑脸，突然觉得人类的表情一旦停止，就显得无比惊悚和虚无。',w:{absurdity_perception:3}},
+    {id:'C',text:'趁机靠在椅背上闭上眼，把这次故障当成一次合理的、不用工作的借口。',w:{sisyphean_resistance:-2,value_alignment:1}},
+    {id:'D',text:'冷静地按下强制重启键，接受所有未保存数据丢失的现实，准备重头再来。',w:{orbital_stability:3,sisyphean_resistance:2}}
+  ]},
+  {id:'Q10',scenario:'凌晨两点去洗手间，你看着镜子里的自己，持续看了三十秒。',options:[
+    {id:'A',text:'觉得自己的状态很差，开始计划明天必须要早睡，恢复正常的作息。',w:{orbital_stability:3}},
+    {id:'B',text:'突然觉得镜子里这张脸极其陌生，仿佛那只是一具恰好由你驾驶的碳基躯壳。',w:{absurdity_perception:3,internal_ocean:2}},
+    {id:'C',text:'移开视线。你不喜欢在深夜过度审视自己，那会让你感到防御机制被削弱。',w:{atmospheric_defense:3}},
+    {id:'D',text:'对着镜子做了一个极其怪异的表情，试图在这个无聊的夜晚确认自己还能控制些什么。',w:{sisyphean_resistance:2,absurdity_perception:1}}
+  ]},
+  {id:'Q11',scenario:'你常去的那家毫无特色、老板也很冷漠的旧面馆，今天突然贴出了"旺铺转让"。',options:[
+    {id:'A',text:'觉得有些遗憾，但很快在脑海里搜索附近其他可以替代的餐厅。',w:{orbital_stability:2,stellar_attachment:-2}},
+    {id:'B',text:'感到一种难以言喻的丧失感，仿佛你生活中的某个锚点突然被拔除了。',w:{stellar_attachment:3}},
+    {id:'C',text:'站在紧闭的卷帘门前看了一会儿，觉得一切事物的消亡都是理所当然的。',w:{absurdity_perception:3}},
+    {id:'D',text:'觉得松了一口气，这下终于有理由去尝试一条全新的回家路线了。',w:{value_alignment:2,sisyphean_resistance:1}}
+  ]},
+  {id:'Q12',scenario:'在连续下雨的第七天，你正走在路上，伞骨突然被一阵妖风彻底吹断了。',options:[
+    {id:'A',text:'迅速把伞扔进垃圾桶，跑到最近的屋檐下，评估买新伞的成本和时间。',w:{orbital_stability:3}},
+    {id:'B',text:'看着变形的伞，觉得这简直是命运对你这几天糟糕情绪的一种具象化嘲弄。',w:{absurdity_perception:2,internal_ocean:2}},
+    {id:'C',text:'顶着坏掉的伞继续走，假装什么都没发生，拒绝在路人面前显得狼狈。',w:{atmospheric_defense:3}},
+    {id:'D',text:'干脆把伞扔了走进雨里，享受这种彻底失控后、不用再小心翼翼防备的痛快。',w:{sisyphean_resistance:2,orbital_stability:-2}}
+  ]},
+  {id:'Q13',scenario:'你在尝试取消一个极其流氓的自动续费订阅，点进了第九个隐藏页面还没找到按钮。',options:[
+    {id:'A',text:'截图保留证据，冷静地查找客服电话或投诉渠道，必须用规则击败规则。',w:{orbital_stability:3,sisyphean_resistance:1}},
+    {id:'B',text:'感到一阵深深的疲惫，觉得现代社会的系统就是为了榨干人类精力而设计的。',w:{absurdity_perception:2,sisyphean_resistance:-2}},
+    {id:'C',text:'关掉页面，选择直接注销绑定的银行卡，用切断源头的物理方式解决麻烦。',w:{atmospheric_defense:2,orbital_stability:-1}},
+    {id:'D',text:'愤怒地在键盘上乱敲，甚至想黑进对方的服务器把这个系统彻底摧毁。',w:{sisyphean_resistance:3,value_alignment:2}}
+  ]},
+  {id:'Q14',scenario:'你的手机震动，收到了一段长达五百字、极其绝望的心事倾诉。但你确认对方发错人了。',options:[
+    {id:'A',text:'礼貌地回复"您发错人了"，结束这段不属于你的社交意外。',w:{atmospheric_defense:2,orbital_stability:1}},
+    {id:'B',text:'反复阅读那段文字，深深地共情了那个不知名陌生人的痛苦，甚至为此失眠。',w:{internal_ocean:3}},
+    {id:'C',text:'假装没看见，直接删除对话框。你不想卷入任何来路不明的情绪黑洞。',w:{atmospheric_defense:3}},
+    {id:'D',text:'顺着对方的话语，以一个虚假但温柔的身份回复他，导演一场短暂的赛博救赎。',w:{internal_ocean:2,absurdity_perception:2}}
+  ]},
+  {id:'Q15',scenario:'你的一副旧耳机，左耳突然没有声音了。',options:[
+    {id:'A',text:'立刻下单买一副新的。无法忍受不对称和不完整的声音体验。',w:{orbital_stability:3}},
+    {id:'B',text:'戴着只有右耳有声音的耳机听了一整天，觉得这种残缺的声音正好契合你的心境。',w:{internal_ocean:2,value_alignment:2}},
+    {id:'C',text:'把左耳的线剪掉，当成单耳耳机继续用。只要还能听响，就不算彻底坏掉。',w:{sisyphean_resistance:3}},
+    {id:'D',text:'把音量开到最大，试图用右耳的巨大轰鸣声掩盖左耳的死寂。',w:{sisyphean_resistance:2,absurdity_perception:2}}
+  ]},
+  {id:'Q16',scenario:'晚上一个人在家，整栋楼突然停电，陷入绝对的黑暗和安静。',options:[
+    {id:'A',text:'熟练地打开手机手电筒，找出备用蜡烛或充电宝，维持基本的光源和秩序。',w:{orbital_stability:3}},
+    {id:'B',text:'坐在沙发上不动，任由黑暗把自己吞没，觉得这才是宇宙原本真实的底色。',w:{absurdity_perception:3,internal_ocean:2}},
+    {id:'C',text:'锁好门窗，躲进卧室的被子里。在失去视觉的安全感时，物理防御必须拉满。',w:{atmospheric_defense:3}},
+    {id:'D',text:'走到阳台上看外面同样漆黑的城市，感到一种所有人都被迫停下运转的隐秘快感。',w:{absurdity_perception:2,value_alignment:2}}
+  ]},
+  {id:'Q17',scenario:'你走进地铁站，面前是一条长得看不见尽头、空无一人的自动扶梯。',options:[
+    {id:'A',text:'站稳扶好，利用这几十秒的时间在脑子里快速过一遍今天的工作清单。',w:{orbital_stability:3}},
+    {id:'B',text:'看着阶梯匀速上升，觉得人就像工业流水线上的罐头，被盲目地运往下一个地点。',w:{absurdity_perception:3}},
+    {id:'C',text:'刻意贴着最边缘站立，与空荡荡的钢铁履带保持一种防备的距离。',w:{atmospheric_defense:3}},
+    {id:'D',text:'放弃自动扶梯，转身跑向旁边的楼梯，用消耗体力的方式证明自己还在主动活着。',w:{sisyphean_resistance:3}}
+  ]},
+  {id:'Q18',scenario:'你极其用心地浇水、呵护了半年的一盆绿植，今天才发现它是极其逼真的塑料假花。',options:[
+    {id:'A',text:'觉得自己的智商受到了侮辱，立刻把它扔进垃圾桶，并清理掉假花盆的位置。',w:{orbital_stability:2,stellar_attachment:-2}},
+    {id:'B',text:'感到一种巨大的荒谬感。原来自己付出的爱和时间，可以倾注在一个死物上。',w:{absurdity_perception:3,internal_ocean:2}},
+    {id:'C',text:'停止浇水，但把它留在原处。假装什么都没发生，反正它依然能提供视觉上的绿意。',w:{atmospheric_defense:2,sisyphean_resistance:1}},
+    {id:'D',text:'突然觉得这盆假花很了不起，它用最欺骗的方式，赢得了真实的照顾。',w:{stellar_attachment:3,value_alignment:2}}
+  ]},
+  {id:'Q19',scenario:'回到家门口，你发现自己没带钥匙，开锁师傅说要等两个小时才能来。',options:[
+    {id:'A',text:'去附近的咖啡厅打开电脑继续工作，不让这段等待时间变成纯粹的浪费。',w:{orbital_stability:3}},
+    {id:'B',text:'坐在家门口的地板上，突然觉得即使只有一门之隔，进不去的家就变成了别人的世界。',w:{internal_ocean:3,absurdity_perception:2}},
+    {id:'C',text:'尽量缩在楼道的死角，不想被任何路过的邻居看到自己进不去门的窘态。',w:{atmospheric_defense:3}},
+    {id:'D',text:'试着用一张硬卡片或铁丝去撬门，哪怕知道不会成功，也想对抗一下这扇铁门。',w:{sisyphean_resistance:3}}
+  ]},
+  {id:'Q20',scenario:'你在一家网红店排了四十分钟队，快排到时才发现自己排错了，这是退货的队伍。',options:[
+    {id:'A',text:'迅速离开，重新找到正确的队伍排尾，冷静接受沉没成本。',w:{orbital_stability:3}},
+    {id:'B',text:'觉得这就是人生的缩影：盲目地跟随着别人，直到尽头才发现一场空。',w:{absurdity_perception:3}},
+    {id:'C',text:'假装自己真的是来退货的，随便找个理由和店员交涉几句，掩饰排错队的尴尬。',w:{atmospheric_defense:3}},
+    {id:'D',text:'直接离开商场不再买了。用放弃整个事件来表达对这种愚蠢规则的抗议。',w:{value_alignment:3,sisyphean_resistance:-1}}
+  ]},
+  {id:'Q21',scenario:'你的一枚硬币掉在地上，一路滚向了下水道的缝隙。你伸出脚去踩。',options:[
+    {id:'A',text:'没踩中。你叹了口气，算清损失后头也不回地走了。',w:{orbital_stability:2,absurdity_perception:-1}},
+    {id:'B',text:'没踩中。你看着它落入深渊，想到这枚硬币将在黑暗的污泥里度过几万年，感到一阵眩晕。',w:{internal_ocean:3,absurdity_perception:2}},
+    {id:'C',text:'没踩中。但你立刻看向周围，确认有没有人目睹你刚才那个略显滑稽的踩踏动作。',w:{atmospheric_defense:3}},
+    {id:'D',text:'踩中了。但你觉得硬币太脏，脚移开后依然眼睁睁看着它掉了下去，享受这种掌控毁灭的瞬间。',w:{absurdity_perception:3,sisyphean_resistance:2}}
+  ]},
+  {id:'Q22',scenario:'你新买的手机屏幕正中央，有一个极小但始终存在的坏死黑像素点。',options:[
+    {id:'A',text:'马上联系售后要求退换货。无法忍受核心工具存在任何物理瑕疵。',w:{orbital_stability:3}},
+    {id:'B',text:'每次看屏幕都会盯着那个黑点，觉得它像一个微型黑洞，在吸走你的注意力。',w:{internal_ocean:3}},
+    {id:'C',text:'贴上一张图案繁杂的防窥膜，试图在视觉上把它隐藏起来，眼不见为净。',w:{atmospheric_defense:3}},
+    {id:'D',text:'决定不换了。觉得这个独特的黑点让这台工业流水线上的手机变成了唯一属于你的残次品。',w:{value_alignment:3,absurdity_perception:2}}
+  ]},
+  {id:'Q23',scenario:'参加完一场漫长且需要不断假笑的社交聚会，你终于关上了自己家的房门。',options:[
+    {id:'A',text:'熟练地卸妆/洗澡，按照时间表准备入睡，把白天的社交当成一份已完成的工作。',w:{orbital_stability:3}},
+    {id:'B',text:'靠在门背上，感觉面部肌肉酸痛，深切地怀疑白天那个侃侃而谈的人到底是不是自己。',w:{internal_ocean:3,absurdity_perception:2}},
+    {id:'C',text:'立刻拉上所有窗帘，把手机静音。你需要厚重的物理屏障来隔绝刚才耗费能量的社交场。',w:{atmospheric_defense:3}},
+    {id:'D',text:'打开音响放极度嘈杂的音乐，试图用一种极端的声浪洗刷掉刚才那些虚伪的客套话。',w:{sisyphean_resistance:2,internal_ocean:2}}
+  ]},
+  {id:'Q24',scenario:'你打一个重要的电话，听筒里的彩铃循环播放了三遍，始终无人接听。',options:[
+    {id:'A',text:'挂断，编辑一条逻辑清晰的文字信息发过去，说明意图并等待回复。',w:{orbital_stability:3}},
+    {id:'B',text:'听着重复的电子音乐，觉得人与人之间想要建立连接，本身就是一件极度偶然且脆弱的事。',w:{absurdity_perception:3,internal_ocean:1}},
+    {id:'C',text:'第一遍没接就挂断了。如果对方不想接，你绝对不想做一个过度打扰、失去体面的人。',w:{atmospheric_defense:3,stellar_attachment:-1}},
+    {id:'D',text:'一直打，直到系统强制切断。哪怕对方觉得烦，你也要把这种压迫感传达过去。',w:{stellar_attachment:3,atmospheric_defense:-2}}
+  ]},
+  {id:'Q25',scenario:'办公室里，你看着碎纸机缓慢而无情地吞噬掉一份曾耗费你半个月心血的作废文件。',options:[
+    {id:'A',text:'确认文件粉碎彻底后离开，心血在作废那一刻就已经归零，这是规则。',w:{orbital_stability:3}},
+    {id:'B',text:'听着纸张被切碎的声音，感到一种被系统碾压的痛苦，觉得自己的生命也像这堆纸屑一样廉价。',w:{internal_ocean:3,absurdity_perception:2}},
+    {id:'C',text:'把碎纸屑仔细倒掉，不留任何痕迹。你不希望别人看到你曾经为一个错误方案付出过努力。',w:{atmospheric_defense:3}},
+    {id:'D',text:'觉得碎纸的过程极度解压。看着繁杂的意义被机器粗暴地解构成物理垃圾，感到十分痛快。',w:{sisyphean_resistance:3,absurdity_perception:2}}
+  ]},
+  {id:'Q26',scenario:'你连续几天做同一个梦：梦里你一直在一条长长的走廊里找一扇不存在的门。',options:[
+    {id:'A',text:'醒来后记录下梦境，分析自己最近的压力源，并尝试在现实中寻找解决焦虑的办法。',w:{orbital_stability:3}},
+    {id:'B',text:'觉得这个梦是某种深刻的潜意识隐喻，暗示你的人生永远被困在寻找意义的走廊里。',w:{absurdity_perception:3,internal_ocean:2}},
+    {id:'C',text:'强迫自己在睡前不去想它，甚至吃褪黑素。你讨厌这种连梦境都无法防御的失控感。',w:{atmospheric_defense:3}},
+    {id:'D',text:'在下一次做梦时，试图在梦里砸碎走廊的墙壁，强行用意识接管梦境的走向。',w:{sisyphean_resistance:3}}
+  ]},
+  {id:'Q27',scenario:'你试图用一截透明胶带粘住一个裂开的盒子，但胶带失去了黏性，怎么也粘不住。',options:[
+    {id:'A',text:'果断扔掉废胶带，去抽屉里找一个新的，或者换用胶水，问题总有物理解决办法。',w:{orbital_stability:3}},
+    {id:'B',text:'捏着失去黏性的胶带发呆，觉得这就像某些怎么努力也无法修复的关系，强行粘合只是徒劳。',w:{internal_ocean:3}},
+    {id:'C',text:'把盒子直接塞进柜子最深处，只要看不见裂缝，就当作它依然完整。',w:{atmospheric_defense:3}},
+    {id:'D',text:'用一整卷废胶带把盒子死死缠住，哪怕它看起来像个畸形的木乃伊，也要强行让它闭合。',w:{stellar_attachment:3,sisyphean_resistance:2}}
+  ]},
+  {id:'Q28',scenario:'收到快递后，你手里拿着一张用于缓冲的气泡纸。',options:[
+    {id:'A',text:'把它平整地折叠好，收进废品箱，保持桌面的绝对整洁和秩序。',w:{orbital_stability:3}},
+    {id:'B',text:'捏破一个气泡。听着"啪"的一声，觉得短暂的破坏欲是填补内心空虚的微小安慰。',w:{internal_ocean:2,absurdity_perception:1}},
+    {id:'C',text:'完整地扔掉它。你不喜欢制造出任何细碎的、不必要的噪音来暴露自己的存在。',w:{atmospheric_defense:3}},
+    {id:'D',text:'用力拧成一团，让所有的气泡在同一秒钟密集地爆裂，享受这种瞬时的、毫无意义的狂欢。',w:{absurdity_perception:3,sisyphean_resistance:1}}
+  ]},
+  {id:'Q29',scenario:'一只迷路的苍蝇飞进了你门窗紧闭的房间，不停地撞击着透明的玻璃窗。',options:[
+    {id:'A',text:'拿起苍蝇拍或杀虫剂，精准且高效地消灭这个破坏环境秩序的干扰源。',w:{orbital_stability:3}},
+    {id:'B',text:'看着它一次次撞向看不见的透明屏障，觉得人类在面对命运的隐形边界时，与苍蝇毫无二致。',w:{absurdity_perception:3,internal_ocean:2}},
+    {id:'C',text:'打开一扇窗户躲到门外。你不愿意直面冲突，只希望它能自己识趣地离开你的领地。',w:{atmospheric_defense:3}},
+    {id:'D',text:'不开窗也不打它。看着它耗尽体力最终掉在窗台上，你只是冷酷地充当一个旁观者。',w:{absurdity_perception:2,value_alignment:2}}
+  ]},
+  {id:'Q30',scenario:'在一家嘈杂的快餐厅，周围突然因为某种巧合，陷入了长达五秒钟的绝对死寂。',options:[
+    {id:'A',text:'趁着安静，快速且专注地吃完最后几口饭，准备赶赴下一个日程。',w:{orbital_stability:3}},
+    {id:'B',text:'感受着这突如其来的寂静，觉得这才是世界剥去喧嚣外壳后，露出的令人战栗的真实底片。',w:{absurdity_perception:3,internal_ocean:2}},
+    {id:'C',text:'感到极度尴尬，立刻低下头假装看手机，生怕自己咀嚼的声音打破这种诡异的宁静。',w:{atmospheric_defense:3}},
+    {id:'D',text:'故意重重地放下手里的水杯，用一声清脆的声音，主动击碎这种让人发疯的沉默。',w:{sisyphean_resistance:3,value_alignment:2}}
+  ]}
+];
 
-    // --- 不规则示波器引擎 (Irregular Oscilloscope Engine) ---
-    const waveCanvas = document.getElementById('oscilloscope');
-    const waveCtx = waveCanvas.getContext('2d');
-    let waveOffset = 0;
-    let amplitude = 12; // 极低的常态振幅
-    let targetAmplitude = 12;
-    let noiseFactor = 0.5;
+/* ══════════════════════════════════
+   DATA: PLANETS
+══════════════════════════════════ */
+const PLANETS={
+  'TOI-700 d':{id:'TOI700d',name:'TOI-700 d',sub:'安静宜居者',
+    col:'#4ade80',glow:'rgba(74,222,128,0.32)',orb:['#17724c','#003a27','#01130e'],
+    nasa:'TOI-700 d 是 NASA TESS 任务发现的一颗系外行星，围绕一颗红矮星运行。它位于恒星的宜居带内，表面可能允许液态水存在。它更像是宇宙提出的一个谨慎假设：在遥远、暗淡、稳定的光照之下，也许仍然存在某种适宜生命停留的可能。它的迷人之处不在于耀眼，而在于它的刚刚好。',
+    traits:['位于宜居带内','围绕较冷的红矮星运行','光照不强烈，气候偏克制','具有生命可能性','不耀眼，但有温度'],
+    profile:'如果你的星球是 TOI-700 d，你的生命力以低温、稳定、缓慢的方式存在。你需要安全环境，不适合被过度要求、过度靠近、过度照射。你身上有一种安静的可居住性，内部有秩序、有温度。你最大的优势是稳定、持久和低调的承载力。你的危险在于太依赖"合适条件"。你的课题是找到一颗不会灼伤你的太阳。',
+    quote:'你不是冰。你只是曾经需要冰。\n\n人们站在你的表面，说这里寒冷，安静，没有生命。他们说得并非全错。他们只是没有抵达足够深的地方。\n\n不要急着证明你的海。海不因无人看见而消失。但也不要永远躲在冰下。生命若只在深处存在，它会安全，也会孤独。',
+    keys:{orbital_stability:3,internal_ocean:1,atmospheric_defense:0,stellar_attachment:0,absurdity_perception:0,sisyphean_resistance:1,value_alignment:1}},
+  'Europa':{id:'Europa',name:'Europa 木卫二',sub:'冰壳深海人格',
+    col:'#38bdf8',glow:'rgba(56,189,248,0.32)',orb:['#176690','#00365a','#03121b'],
+    nasa:'木星的一颗卫星，表面覆盖着明亮、寒冷的冰壳，而在冰层之下可能存在一个全球性的地下海洋。Europa 向人类提出问题：在一个看似冰冷的世界下面，是否仍然有海？在无人抵达的深处，是否仍然有生命？',
+    traits:['木星的冰卫星','表面布满裂纹','冰下可能存在全球性海洋','外部寒冷，内部可能活跃','NASA寻找太阳系生命的重要目标'],
+    profile:'如果你的星球是 Europa，你是一个外冷内深的人。你不轻易展示情绪，习惯让自己看起来理性克制。但你的内部有很深的海，储存着记忆、渴望和无法轻易说出的爱。你的防御不是伪装，而是历史。在关系中你需要耐心，不是入侵。你最大的危险在于，逐渐把冰壳误认为真实的自己。',
+    quote:'你不是冰。你只是曾经需要冰。\n\n人们站在你的表面，说这里寒冷，安静，没有生命。他们说得并非全错。他们只是没有抵达足够深的地方。\n\n不要急着证明你的海。海不因无人看见而消失。但也不要永远躲在冰下。生命若只在深处存在，它会安全，也会孤独。',
+    keys:{orbital_stability:0,internal_ocean:3,atmospheric_defense:1,stellar_attachment:0,absurdity_perception:0,sisyphean_resistance:0,value_alignment:0}},
+  'Enceladus':{id:'Enceladus',name:'Enceladus 土卫二',sub:'裂缝喷泉人格',
+    col:'#f8fafc',glow:'rgba(248,250,252,0.32)',orb:['#646f7e','#1f2d41','#0c1015'],
+    nasa:'土星的一颗冰卫星。NASA 曾观测到其南极区域存在喷流，水汽和冰粒从表面裂缝中喷向太空。Enceladus 最重要的信息，不是来自完整的表面，而是来自裂缝。这是一颗通过破裂向宇宙说话的天体。',
+    traits:['土星的冰卫星','南极区域存在喷流','冰下可能有液态海洋','裂缝成为内部世界的出口','生命迹象可能从破损处显现'],
+    profile:'如果你的星球是 Enceladus，你的生命力常常从裂缝中出现。你可能经历过关系的断裂或自我认知的重建，但这些破裂也让你内部深处的东西有了出口。你不是靠完美维持尊严的人，你的真实、创造力和精神韧性往往来自你曾经破碎过。你会在废墟里寻找结构。',
+    quote:'裂缝不是失败。有时，那是深处仍有海的证据。\n\n你曾经以为自己破了。后来才知道，正是那里让宇宙听见了你。\n\n不要崇拜痛苦。痛苦本身并不高贵。但如果它已经发生，你仍然可以让它成为出口，而不是终点。',
+    keys:{orbital_stability:0,internal_ocean:2,atmospheric_defense:0,stellar_attachment:0,absurdity_perception:1,sisyphean_resistance:3,value_alignment:0}},
+  'Pluto':{id:'Pluto',name:'Pluto 冥王星',sub:'边缘完整者',
+    col:'#94a3b8',glow:'rgba(148,163,184,0.32)',orb:['#3b475a','#0a1527','#070a0e'],
+    nasa:'曾被视为第九大行星，后被重新分类为矮行星。New Horizons 探测器揭示它拥有复杂的地貌、冰原和山脉。它被重新定义，却并没有因此变得简单。Pluto 是一个关于身份、边缘、命名和尊严的宇宙故事。',
+    traits:['曾被认为是第九大行星','被重新分类为矮行星','位于太阳系遥远边缘','被重新命名，却仍然完整','边缘位置不等于简单或失败'],
+    profile:'如果你的星球是 Pluto，你很可能经历过某种"被重新定义"的时刻。你被降级、误解，或被移出中心。你渴望被承认，但又不愿意为了被承认而扭曲自己。你可以在边缘生活，但拒绝为了进入中心而丢掉轨道。你的优势是尊严、独立和自我保存能力。',
+    quote:'有一天，世界改变了你的名字。你没有因此停止运行。这就是你的尊严。\n\n人类喜欢分类，因为他们害怕复杂。他们把你移出名单，仿佛名单就是宇宙。但宇宙并不读名单。\n\n你在遥远的地方继续存在。寒冷，缓慢，完整。不再需要中心的承认，也不把边缘误认为失败。',
+    keys:{orbital_stability:0,internal_ocean:0,atmospheric_defense:0,stellar_attachment:0,absurdity_perception:2,sisyphean_resistance:2,value_alignment:3}},
+  '55 Cancri e':{id:'55Cancrie',name:'55 Cancri e',sub:'高压钻石人格',
+    col:'#c084fc',glow:'rgba(192,132,252,0.32)',orb:['#7236a4','#440873','#160721'],
+    nasa:'一颗极端的超级地球，距离母恒星非常近，表面温度极高。曾因富含碳元素而被大众称为钻石行星。它是一个在巨大压力和高温之下形成特殊价值的宇宙隐喻，提醒人类：有些光泽不是轻松长出来的。',
+    traits:['超级地球','距离恒星极近','表面温度极高','高密度、高压力','美丽传说背后是极端环境'],
+    profile:'如果你的星球是 55 Cancri e，你是一个在高压中形成价值的人。你的能力与克制来自长期的挤压，身上有一种代价高昂的昂贵感。你很难真正放松，习惯把自己推向更高标准。你对亲密关系既渴望又警惕，有密度、有硬度，也有一种不轻易妥协的精神骨架。',
+    quote:'你以为自己是钻石。也许你只是一直生活在压力之中。\n\n这并不贬低你的光。相反，它说明你的光从未廉价。\n\n但人不能永远把苦难当成矿床。总有一天，你要学会在没有压迫的地方，仍然允许自己珍贵。',
+    keys:{orbital_stability:3,internal_ocean:0,atmospheric_defense:1,stellar_attachment:0,absurdity_perception:0,sisyphean_resistance:2,value_alignment:0}},
+  'HD 189733 b':{id:'HD189733b',name:'HD 189733 b',sub:'蓝色风暴人格',
+    col:'#2563eb',glow:'rgba(37,99,235,0.32)',orb:['#1f44a2','#0a2676','#070e22'],
+    nasa:'距离地球约六十多光年，外观呈现深蓝色，常被误以为宁静。但其大气中存在硅酸盐颗粒，强烈的高速风暴横扫星球。它的蓝不是海洋的蓝，而是风暴、灼热与切割玻璃雨构成的蓝。这是一个关于表象误读的宇宙案例。',
+    traits:['热木星','深蓝色外观','极端高温','高速大气风暴','外表美丽，内部危险'],
+    profile:'如果你的星球是 HD 189733 b，你给人的第一印象冷静理性，但内部并不平静。你有强烈的情绪气候，习惯把混乱包装成优雅、把愤怒处理成沉默。在关系中你有吸引力也有危险性，靠近你的人如果结构不够稳定，可能会被卷入风暴。你擅长把灾难整理成美感，但容易忘记疼痛本身。',
+    quote:'人们总是相信蓝色意味着海。他们忘了，宇宙从不承诺颜色的含义。\n\n你的平静也是这样。它并不等于安全。它只是风暴在远处形成的一种视觉效果。\n\n但你要小心。如果你永远把灾难伪装成美，总有一天，连你自己也会忘记疼痛真正的名字。',
+    keys:{orbital_stability:0,internal_ocean:2,atmospheric_defense:2,stellar_attachment:0,absurdity_perception:2,sisyphean_resistance:0,value_alignment:0}},
+  'WASP-12b':{id:'WASP12b',name:'WASP-12b',sub:'被吞噬的热烈者',
+    col:'#fb923c',glow:'rgba(251,146,60,0.32)',orb:['#9b461c','#681900','#1f0b04'],
+    nasa:'一颗极端的热木星，距离母恒星非常近。自身物质正在被母恒星逐渐拉扯、消耗。它的存在带着一种危险的亲密感：靠近光，同时被光吞噬。',
+    traits:['极端热木星','距离母恒星非常近','可能正在被恒星逐渐消耗','过度靠近带来燃烧与失控','光源也是危险源'],
+    profile:'如果你的星球是 WASP-12b，你是一个热烈、投入、容易被强引力捕获的人。你不擅长安全地保持距离，一旦陷入，很容易把整个生命轨道交给对方。你害怕平庸，宁愿被灼伤，也不愿在安全距离里慢慢变成一颗无光的石头。你最大的危险在于，容易把"被吞噬"误认为"被爱"。',
+    quote:'不是所有光都值得靠近。有些光只是在练习吞噬。\n\n你以为自己是在爱，其实你可能只是在绕着危险运行。这并不说明你的热烈是错的。热烈从来不是罪。\n\n只是人必须学会判断：什么会照亮你，什么会把你烧空。',
+    keys:{orbital_stability:0,internal_ocean:0,atmospheric_defense:0,stellar_attachment:3,absurdity_perception:0,sisyphean_resistance:0,value_alignment:0}},
+  'K2-18 b':{id:'K218b',name:'K2-18 b',sub:'深海未知者',
+    col:'#2dd4bf',glow:'rgba(45,212,191,0.32)',orb:['#196f67','#003a36','#041312'],
+    nasa:'位于宜居带内的系外行星，围绕红矮星运行。人类并没有看见它的海，只是从遥远的大气光谱中猜测它的深处。它的吸引力不在确定答案，而在于间接信号。',
+    traits:['位于宜居带内','可能拥有厚重大气','可能存在海洋世界','真实面貌仍不确定','只能通过间接信号理解'],
+    profile:'如果你的星球是 K2-18 b，你是一个极难被直接理解的人。你的内在结构本来就复杂，你的自我像被厚重大气包裹的海洋，外界看到的是信号而不是本体。你可能常常感到别人没有精密的仪器抵达你，因而习惯了被误解，逐渐不再主动翻译自己。',
+    quote:'被看见的从来不是海。只是海试图抵达天空的证据。\n\n你发出的信号很微弱，但并不等于你不存在。\n\n你不需要被所有人完全理解。但你要小心，不要把不可观测，误认为无人可达。',
+    keys:{orbital_stability:0,internal_ocean:3,atmospheric_defense:2,stellar_attachment:0,absurdity_perception:1,sisyphean_resistance:0,value_alignment:0}},
+  'Titan':{id:'Titan',name:'Titan 土卫六',sub:'异世界大气人格',
+    col:'#fbbf24',glow:'rgba(251,191,36,0.32)',orb:['#985714','#642100','#1e0d03'],
+    nasa:'土星最大的卫星，拥有厚厚的大气层，表面存在由甲烷和乙烷构成的湖泊与河流。它向人类提出的问题是：生命和世界，是否必须以我们熟悉的方式存在？',
+    traits:['土星最大卫星','拥有浓厚大气层','表面存在甲烷和乙烷湖泊','有类似地球的地貌过程','异质但自成系统'],
+    profile:'如果你的星球是 Titan，你是一个无法用常规标准理解的人。你的感受方式和生活逻辑与主流不同，你拥有另一套独立的心理气候系统。你不适合被强行地球化，别人越是用世俗标准要求你，你越会感到窒息。你通过差异证明存在，而不是通过相似获得安全。',
+    quote:'你不是不适合生命。你只是拒绝以常规方式活着。\n\n人们习惯用地球解释宇宙。所以他们看见你时，先说陌生，再说错误。但陌生不是错误。不同也不是失败。\n\n你可以拥有自己的天气，自己的湖泊，自己的夜晚。只是不要忘记：再遥远的世界，也可以被温柔地登陆。',
+    keys:{orbital_stability:0,internal_ocean:0,atmospheric_defense:3,stellar_attachment:0,absurdity_perception:0,sisyphean_resistance:0,value_alignment:2}},
+  'Proxima Centauri b':{id:'ProximaCentaurib',name:'Proxima Centauri b',sub:'最近的孤独者',
+    col:'#f472b6',glow:'rgba(244,114,182,0.32)',orb:['#9f2e5f','#6f042f','#200610'],
+    nasa:'围绕比邻星运行的系外行星。比邻星是距离太阳最近的恒星，它离我们最近，却仍然遥不可及。天文学上最近的邻居，在人的尺度上仍是不可抵达的深空。',
+    traits:['离太阳系最近的系外行星之一','位于宜居带附近','可能受到恒星活动影响','近在宇宙邻域，仍然难以抵达','亲近与危险并存'],
+    profile:'如果你的星球是 Proxima Centauri b，你是一个近在咫尺的孤独者。你和别人保持正常关系，但坐在一个人身边时，却感觉彼此隔着光年。你渴望靠近，又害怕被期待或风暴灼伤。你最大的矛盾是：离别人不远，但很难真正交出自己，缺少一种让你完全安全存在的关系。',
+    quote:'距离不是用光年来计算的。有些人坐在你身边，却仍像另一颗星。\n\n你并不是真的遥远。你只是还没有相信，靠近可以不等于毁灭。\n\n宇宙中最近的恒星，仍需要光年抵达。所以你不必责怪自己慢。但如果有人愿意学习你的轨道，不要急着把他归入黑暗。',
+    keys:{orbital_stability:0,internal_ocean:2,atmospheric_defense:1,stellar_attachment:0,absurdity_perception:1,sisyphean_resistance:0,value_alignment:0}},
+  'Kepler-452b':{id:'Kepler452b',name:'Kepler-452b',sub:'旧地球继承者',
+    col:'#84cc16',glow:'rgba(132,204,22,0.32)',orb:['#497114','#223f00','#0d1405'],
+    nasa:'曾被称为地球2.0，围绕类太阳恒星运行，位于宜居带内。它比地球更大、更古老。像是宇宙里一封来自时间深处的信：如果地球继续老去，它会成为什么？',
+    traits:['位于宜居带内','围绕类太阳恒星运行','曾被称为"地球表亲"','可能比地球更大、更古老','成熟与承担感的象征'],
+    profile:'如果你的星球是 Kepler-452b，你像一个过早成熟的人。你身上有一种长期的承担感，从很早开始就习惯负责、规划、照顾整体。你有着强烈的长期主义倾向，在意一件事是否能经得起时间。别人依赖你的稳定，你很少允许自己轻易崩溃，把运行当作责任，却忘记了自己也需要被照顾。',
+    quote:'你原不是老去得太快。你只是太早学会了替世界承担重量。\n\n人们赞美你的稳定，却很少询问它的代价。你可以继续负责。这也许是你的天性。但不要把所有疲惫都解释成使命。\n\n即使宇宙没有意义，你也不必独自维持它的秩序。有些时候，放下并不是坍缩，只是让自己重新成为人。',
+    keys:{orbital_stability:3,internal_ocean:0,atmospheric_defense:0,stellar_attachment:0,absurdity_perception:0,sisyphean_resistance:2,value_alignment:1}},
+  'GJ 1214 b':{id:'GJ1214b',name:'GJ 1214 b',sub:'雾层保护者',
+    col:'#64748b',glow:'rgba(100,116,139,0.32)',orb:['#242e42','#000316','#03050a'],
+    nasa:'围绕红矮星运行的系外行星。它的大气被厚厚的云层或雾霾完全遮蔽，使得人类很难直接读取其深层内部信息。它存在，它影响光，但它拒绝轻易被看清。其神秘来自遮蔽，而非遥远。',
+    traits:['介于超级地球和迷你海王星之间','可能拥有厚重大气','云层让大气成分难以观测','存在感明确，但内部模糊','保护与遮蔽并存'],
+    profile:'如果你的星球是 GJ 1214 b，你是一个被雾层保护的人。你不是没有内容，而是不轻易让人看清内容。你在外界表现得礼貌而模糊，这种模糊是你的生存智慧。你在人际关系中擅长控制距离，避免过度透明，喜欢保留一个属于自己的内部空间。优势是不被外界轻易定义，危险在于雾层会隔绝真正想靠近你的人。',
+    quote:'有时，不被看清不是逃避，而是保存。\n\n雾保护了你。它让粗暴的目光无法直接抵达。也让温柔的人，不得不在外面等待。\n\n你不需要向所有人散去大气。透明不是唯一的诚实。但你要知道，如果雾永不退去，连爱也只能猜测你。',
+    keys:{orbital_stability:0,internal_ocean:0,atmospheric_defense:3,stellar_attachment:0,absurdity_perception:0,sisyphean_resistance:0,value_alignment:1}}
+};
 
-    function resizeWave() {
-        waveCanvas.width = window.innerWidth;
-        waveCanvas.height = 250;
-    }
-    window.addEventListener('resize', resizeWave);
-    resizeWave();
+const DIM_KEYS=['orbital_stability','internal_ocean','atmospheric_defense','stellar_attachment','absurdity_perception','sisyphean_resistance','value_alignment'];
+const DIM_LABELS={'orbital_stability':'轨道稳定性','internal_ocean':'内在海洋深度','atmospheric_defense':'大气防御厚度','stellar_attachment':'恒星依附度','absurdity_perception':'荒诞感知力','sisyphean_resistance':'西西弗斯反抗力','value_alignment':'价值一致性'};
 
-    function drawWave() {
-        waveCtx.clearRect(0, 0, waveCanvas.width, waveCanvas.height);
-        
-        // 物理阻尼与平滑平息
-        amplitude += (targetAmplitude - amplitude) * 0.08;
-        if (targetAmplitude > 12) targetAmplitude -= 0.8; // 快速衰减
-        noiseFactor = amplitude / 12;
+/* ══════════════════════════════════
+   STATE
+══════════════════════════════════ */
+let curQ=0,scores={};
+DIM_KEYS.forEach(k=>scores[k]=0);
 
-        waveCtx.beginPath();
-        waveCtx.lineWidth = 1.8;
-        waveCtx.strokeStyle = 'rgba(74, 222, 128, 0.7)';
-        waveCtx.shadowBlur = 10;
-        waveCtx.shadowColor = '#4ade80';
+function computeResult(){
+  let best=null,bestS=-Infinity;
+  Object.entries(PLANETS).forEach(([name,p])=>{
+    let s=0;DIM_KEYS.forEach(k=>s+=(p.keys[k]||0)*scores[k]);
+    if(s>bestS){bestS=s;best=name;}
+  });
+  return best;
+}
 
-        const centerY = waveCanvas.height / 2;
-        
-        for (let x = 0; x < waveCanvas.width; x++) {
-            // 叠加多重正弦波产生不规则模拟信号感
-            let lf = Math.sin(x * 0.008 + waveOffset * 0.5) * amplitude;
-            let mf = Math.sin(x * 0.04 - waveOffset * 1.2) * (amplitude * 0.4);
-            let hf = Math.sin(x * 0.15 + waveOffset * 2) * (amplitude * 0.15 * noiseFactor);
-            // 细碎电平抖动
-            let jitter = (Math.random() - 0.5) * noiseFactor * 4;
+/* ══════════════════════════════════
+   SCREEN MANAGER
+══════════════════════════════════ */
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
 
-            let y = centerY + lf + mf + hf + jitter;
-            
-            if (x === 0) waveCtx.moveTo(x, y);
-            else waveCtx.lineTo(x, y);
-        }
-        
-        waveCtx.stroke();
-        waveOffset += 0.04;
-        requestAnimationFrame(drawWave);
-    }
-    drawWave();
+/* ══════════════════════════════════
+   QUIZ ENGINE
+══════════════════════════════════ */
+function renderQ(idx){
+  const q=QUESTIONS[idx];
+  const pct=Math.round((idx/QUESTIONS.length)*100);
+  document.getElementById('qFill').style.width=pct+'%';
+  document.getElementById('sigLbl').textContent=`SIGNAL ${String(idx+1).padStart(2,'0')} / ${QUESTIONS.length}`;
+  document.getElementById('qCount').textContent=`${String(idx+1).padStart(2,'0')} / ${QUESTIONS.length}`;
+  const body=document.getElementById('qBody');
+  body.innerHTML=`
+    <p class="q-scenario-label">SCENARIO_${q.id} // INPUT REQUIRED</p>
+    <p class="q-scenario">${q.scenario}</p>
+    <div class="opts" id="opts"></div>`;
+  const opts=document.getElementById('opts');
+  q.options.forEach(o=>{
+    const b=document.createElement('button');
+    b.className='opt';
+    b.innerHTML=`<span class="opt-l">${o.id}</span><span class="opt-t">${o.text}</span>`;
+    b.addEventListener('click',()=>selectOpt(o));
+    opts.appendChild(b);
+  });
+}
 
-    // 触发情绪震荡
-    function triggerShock() {
-        targetAmplitude = 95; // 瞬间爆发极高振幅
-    }
+function selectOpt(opt){
+  triggerInterference();
+  Object.entries(opt.w).forEach(([k,v])=>{if(scores[k]!==undefined)scores[k]+=v;});
+  curQ++;
+  if(curQ>=QUESTIONS.length){finishQuiz();return;}
+  const body=document.getElementById('qBody');
+  body.style.cssText='opacity:0;transform:translateY(-8px);transition:opacity .25s,transform .25s';
+  setTimeout(()=>{body.style.cssText='';renderQ(curQ);},280);
+}
 
-    // --- 流程控制 ---
-    function startTest() {
-        triggerShock();
-        document.getElementById('screen-home').classList.remove('active');
-        setTimeout(() => {
-            document.getElementById('screen-question').classList.add('active');
-            renderQuestion();
-        }, 600);
-    }
+/* ══════════════════════════════════
+   CALCULATING
+══════════════════════════════════ */
+function finishQuiz(){
+  showScreen('screen-calc');
+  const el=document.getElementById('calcLines');
+  const lines=[
+    '> READING GRAVITY SIGNATURES...',
+    `> orbital_stability      ${scores.orbital_stability>=0?'+':''}${scores.orbital_stability}`,
+    `> internal_ocean         ${scores.internal_ocean>=0?'+':''}${scores.internal_ocean}`,
+    `> atmospheric_defense    ${scores.atmospheric_defense>=0?'+':''}${scores.atmospheric_defense}`,
+    `> stellar_attachment     ${scores.stellar_attachment>=0?'+':''}${scores.stellar_attachment}`,
+    `> absurdity_perception   ${scores.absurdity_perception>=0?'+':''}${scores.absurdity_perception}`,
+    `> sisyphean_resistance   ${scores.sisyphean_resistance>=0?'+':''}${scores.sisyphean_resistance}`,
+    `> value_alignment        ${scores.value_alignment>=0?'+':''}${scores.value_alignment}`,
+    '> MATCHING EXOPLANET DATABASE...',
+    '> COORDINATE ESTABLISHED.',
+  ];
+  let i=0;
+  (function print(){
+    if(i<lines.length){el.textContent+=lines[i]+'\n';i++;setTimeout(print,180);}
+    else{document.getElementById('calcStatus').textContent='PLANET IDENTIFIED.';setTimeout(showResult,900);}
+  })();
+}
 
-    function renderQuestion() {
-        const qData = QUESTIONS[currentQ];
-        const progText = `SIGNAL ${String(currentQ+1).padStart(2,'0')}/${String(QUESTIONS.length).padStart(2,'0')}`;
-        document.getElementById('q-progress').innerText = progText;
-        document.getElementById('q-progress').setAttribute('data-text', progText);
-        document.getElementById('q-title').innerText = qData.q;
-        
-        const list = document.getElementById('opt-list');
-        list.innerHTML = '';
-        qData.opts.forEach(opt => {
-            const div = document.createElement('div');
-            div.className = 'option-item';
-            div.innerText = opt.t;
-            div.onclick = () => selectOption(opt.w);
-            list.appendChild(div);
-        });
-    }
+/* ══════════════════════════════════
+   RESULT
+══════════════════════════════════ */
+function showResult(){
+  const pName=computeResult();
+  const p=PLANETS[pName];
+  showScreen('screen-result');
+  const maxAbs=Math.max(...DIM_KEYS.map(k=>Math.abs(scores[k])),1);
+  const rd=DIM_KEYS.map(k=>Math.max(0,scores[k])/maxAbs);
+  // Inject per-planet CSS variables onto result screen
+  const rs = document.getElementById('screen-result');
+  rs.style.setProperty('--planet-col', p.col);
+  rs.style.setProperty('--planet-glow', p.glow);
+  const [pr,pg,pb] = p.col.length===7
+    ? [parseInt(p.col.slice(1,3),16),parseInt(p.col.slice(3,5),16),parseInt(p.col.slice(5,7),16)]
+    : [100,100,100];
+  rs.style.setProperty('--planet-rgb', `${pr},${pg},${pb}`);
 
-    function selectOption(weights) {
-        triggerShock();
-        for (let k in weights) scores[k] += weights[k];
-        
-        document.getElementById('screen-question').classList.remove('active');
-        setTimeout(() => {
-            if (currentQ < QUESTIONS.length - 1) {
-                currentQ++;
-                renderQuestion();
-                document.getElementById('screen-question').classList.add('active');
-            } else {
-                showCalc();
-            }
-        }, 500);
-    }
+  document.getElementById('rWrap').innerHTML=`
+    <div class="r-coord">COORDINATE ESTABLISHED // SYSTEM_ID: ${p.id} // MATCH_CONFIRMED</div>
+    <div class="r-header">
+      <div class="r-orb">${buildSVG(p)}</div>
+      <div class="r-title">
+        <div class="r-name">${p.name}</div>
+        <div class="r-sub">${p.sub}</div>
+      </div>
+    </div>
+    <div class="r-sec">
+      <div class="r-sec-label">// NASA COSMIC PROFILE</div>
+      <p class="nasa-text">${p.nasa}</p>
+    </div>
+    <div class="r-sec">
+      <div class="r-sec-label">// STELLAR CHARACTERISTICS</div>
+      <div class="traits">${p.traits.map(t=>`<span class="chip">${t}</span>`).join('')}</div>
+    </div>
+    <div class="r-sec">
+      <div class="r-sec-label">// PSYCHOLOGICAL PROFILE</div>
+      <p class="r-text bright">${p.profile}</p>
+    </div>
+    <div class="r-sec">
+      <div class="r-sec-label">// GRAVITY FIELD — 7 DIMENSIONS</div>
+      <canvas id="radarCanvas" width="300" height="300"></canvas>
+      <div class="dim-grid" id="dimGrid"></div>
+    </div>
+    <div class="r-sec">
+      <div class="r-sec-label">// MYSTERY TRANSMISSION</div>
+      <div class="mystery">${p.quote}</div>
+    </div>
+    <div class="poster-sec">
+      <div class="r-sec-label">// GENERATE IDENTITY POSTER</div>
+      <div class="poster-preview"><img id="posterPreview" alt="star map"></div>
+      <button class="dl-btn" id="btnDL">↓ DOWNLOAD STAR MAP POSTER</button>
+      <button class="rs-btn" id="btnRS">↺ RESTART TRANSMISSION</button>
+    </div>`;
+  setTimeout(()=>{
+    drawRadar(document.getElementById('radarCanvas'),rd,p.col);
+    buildDimGrid(document.getElementById('dimGrid'),rd);
+    genPoster(p,rd);
+  },100);
+  document.getElementById('btnRS').onclick=()=>{curQ=0;DIM_KEYS.forEach(k=>scores[k]=0);showScreen('screen-landing');};
+  document.getElementById('btnDL').onclick=dlPoster;
+}
 
-    function showCalc() {
-        document.getElementById('screen-calc').classList.add('active');
-        
-        const statuses = ["ANALYZING ATMOSPHERE...", "MAPPING ORBITAL DATA...", "DECRYPTING INNER OCEAN...", "FINALIZING COORDINATES..."];
-        let i = 0;
-        const intv = setInterval(() => {
-            document.getElementById('calc-status').innerText = statuses[i];
-            document.getElementById('calc-status').setAttribute('data-text', statuses[i]);
-            i++;
-            if(i >= statuses.length) {
-                clearInterval(intv);
-                generateFinalPoster();
-            }
-        }, 900);
-    }
+function buildSVG(p){
+  const [c1,c2,c3]=p.orb;
+  return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="rg${p.id}" cx="36%" cy="30%" r="68%">
+        <stop offset="0%" stop-color="${p.col}" stop-opacity=".85"/>
+        <stop offset="40%" stop-color="${c1}"/>
+        <stop offset="72%" stop-color="${c2}"/>
+        <stop offset="100%" stop-color="${c3}"/>
+      </radialGradient>
+      <radialGradient id="hl${p.id}" cx="30%" cy="25%" r="45%">
+        <stop offset="0%" stop-color="${p.col}" stop-opacity=".4"/>
+        <stop offset="100%" stop-color="${p.col}" stop-opacity="0"/>
+      </radialGradient>
+      <filter id="bf${p.id}" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="3.5"/>
+      </filter>
+      <filter id="sf${p.id}" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur stdDeviation="1.2"/>
+      </filter>
+    </defs>
+    <!-- outer atmospheric glow -->
+    <circle cx="50" cy="50" r="46" fill="${p.col}" opacity=".1" filter="url(#bf${p.id})"/>
+    <!-- second glow ring -->
+    <circle cx="50" cy="50" r="40" fill="${p.col}" opacity=".06" filter="url(#sf${p.id})"/>
+    <!-- planet body -->
+    <circle cx="50" cy="50" r="34" fill="url(#rg${p.id})"/>
+    <!-- specular highlight -->
+    <circle cx="50" cy="50" r="34" fill="url(#hl${p.id})"/>
+    <!-- terminator edge darkening -->
+    <circle cx="50" cy="50" r="34" fill="none" stroke="${c3}" stroke-width="1" opacity=".6"/>
+    <!-- orbit ring tilted -->
+    <ellipse cx="50" cy="50" rx="46" ry="10" fill="none" stroke="${p.col}" stroke-width=".6" opacity=".4"/>
+    <ellipse cx="50" cy="50" rx="46" ry="10" fill="none" stroke="${p.col}" stroke-width="2" stroke-dasharray="4 40" opacity=".6"/>
+    <!-- orbital dot -->
+    <circle cx="96" cy="50" r="2.5" fill="${p.col}" opacity=".85"/>
+    <circle cx="96" cy="50" r="4" fill="${p.col}" opacity=".2" filter="url(#sf${p.id})"/>
+  </svg>`;
+}
 
-    // --- 海报生成引擎 2.0 ---
-    function generateFinalPoster() {
-        // 余弦相似度匹配算法
-        let bestPlanet = null;
-        let maxSimilarity = -Infinity;
+/* ══════════════════════════════════
+   RADAR
+══════════════════════════════════ */
+function drawRadar(canvas,data,pCol){
+  const ctx=canvas.getContext('2d'),W=canvas.width,H=canvas.height;
+  const cx=W/2,cy=H/2,maxR=Math.min(W,H)*.38,n=data.length;
+  ctx.clearRect(0,0,W,H);
+  [.25,.5,.75,1].forEach(f=>{
+    ctx.beginPath();
+    for(let i=0;i<n;i++){const a=(Math.PI*2/n)*i-Math.PI/2;ctx.lineTo(cx+Math.cos(a)*maxR*f,cy+Math.sin(a)*maxR*f);}
+    ctx.closePath();ctx.strokeStyle='rgba(255,255,255,.06)';ctx.lineWidth=1;ctx.stroke();
+  });
+  for(let i=0;i<n;i++){
+    const a=(Math.PI*2/n)*i-Math.PI/2;
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(a)*maxR,cy+Math.sin(a)*maxR);
+    ctx.strokeStyle='rgba(255,255,255,.08)';ctx.lineWidth=1;ctx.stroke();
+  }
+  ctx.beginPath();
+  data.forEach((v,i)=>{const a=(Math.PI*2/n)*i-Math.PI/2,r=v*maxR;i===0?ctx.moveTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r):ctx.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r);});
+  ctx.closePath();
+  const _rgb=pCol&&pCol.startsWith('#')?[parseInt(pCol.slice(1,3),16),parseInt(pCol.slice(3,5),16),parseInt(pCol.slice(5,7),16)]:[56,189,248];
+  ctx.fillStyle=`rgba(${_rgb[0]},${_rgb[1]},${_rgb[2]},.13)`;ctx.fill();
+  ctx.strokeStyle=`rgba(${_rgb[0]},${_rgb[1]},${_rgb[2]},.8)`;ctx.lineWidth=1.5;
+  ctx.shadowBlur=8;ctx.shadowColor=`rgba(${_rgb[0]},${_rgb[1]},${_rgb[2]},.5)`;ctx.stroke();ctx.shadowBlur=0;
+  data.forEach((v,i)=>{const a=(Math.PI*2/n)*i-Math.PI/2,r=v*maxR;ctx.beginPath();ctx.arc(cx+Math.cos(a)*r,cy+Math.sin(a)*r,3.2,0,Math.PI*2);ctx.fillStyle=pCol||'#38bdf8';ctx.shadowBlur=5;ctx.shadowColor=pCol||'#38bdf8';ctx.fill();ctx.shadowBlur=0;});
+  ctx.font=`9px 'Space Mono',monospace`;ctx.fillStyle='rgba(255,255,255,.3)';ctx.textAlign='center';
+  DIM_KEYS.forEach((k,i)=>{
+    const a=(Math.PI*2/n)*i-Math.PI/2,lr=maxR+22;
+    ctx.fillText(DIM_LABELS[k].substring(0,4),cx+Math.cos(a)*lr,cy+Math.sin(a)*lr+4);
+  });
+}
 
-        for (let key in PLANET_CONFIGS) {
-            let p = PLANET_CONFIGS[key];
-            let dotProduct = 0, normA = 0, normB = 0;
-            for (let dim in scores) {
-                let valA = scores[dim] || 0;
-                // 放大基准分适应少量题库
-                let valB = (p.dimensions[dim] || 3) * (QUESTIONS.length / 5); 
-                dotProduct += valA * valB;
-                normA += valA * valA;
-                normB += valB * valB;
-            }
-            let sim = dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
-            if (sim > maxSimilarity || isNaN(sim)) {
-                maxSimilarity = sim;
-                bestPlanet = p;
-            }
-        }
+function buildDimGrid(el,data){
+  el.innerHTML=DIM_KEYS.map((k,i)=>{
+    const pct=Math.round(data[i]*100);
+    return `<div class="dim-row"><span class="dim-lbl">${DIM_LABELS[k]}</span><div class="dim-bg"><div class="dim-fill" style="width:0" data-p="${pct}"></div></div><span class="dim-val">${pct}</span></div>`;
+  }).join('');
+  setTimeout(()=>el.querySelectorAll('.dim-fill').forEach(b=>b.style.width=b.dataset.p+'%'),50);
+}
 
-        // 防止计算全是0的情况
-        if(!bestPlanet) bestPlanet = PLANET_CONFIGS["Europa"];
+/* ══════════════════════════════════
+   POSTER ENGINE
+══════════════════════════════════ */
+let posterURL=null;
 
-        // Canvas绘制
-        const canvas = document.createElement('canvas');
-        canvas.width = 800; canvas.height = 1350; // 加长海报以容纳全部文字
-        const ctx = canvas.getContext('2d');
+function hexRgb(hex){return[parseInt(hex.slice(1,3),16),parseInt(hex.slice(3,5),16),parseInt(hex.slice(5,7),16)].join(',')}
 
-        // 纯黑背景
-        ctx.fillStyle = '#050507';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+function wrapText(ctx,text,maxW){
+  const chars=[...text],lines=[];let line='';
+  chars.forEach(ch=>{if(ctx.measureText(line+ch).width>maxW&&line){lines.push(line);line=ch;}else line+=ch;});
+  if(line)lines.push(line);return lines;
+}
 
-        // 绘制宇宙星尘噪点
-        for(let i=0; i<600; i++) {
-            ctx.fillStyle = `rgba(255,255,255,${Math.random()*0.4})`;
-            ctx.fillRect(Math.random()*canvas.width, Math.random()*canvas.height, Math.random()*1.5, Math.random()*1.5);
-        }
+function genPoster(p,rd){
+  const W=800,H=1200,c=document.getElementById('posterCanvas');
+  c.width=W;c.height=H;
+  const ctx=c.getContext('2d');
+  // bg
+  ctx.fillStyle='#07070c';ctx.fillRect(0,0,W,H);
+  // noise dots
+  ctx.fillStyle='rgba(255,255,255,.018)';
+  for(let i=0;i<2000;i++)ctx.fillRect(Math.random()*W,Math.random()*H,1,1);
+  // scanlines
+  ctx.fillStyle='rgba(0,0,0,.055)';
+  for(let y=0;y<H;y+=4)ctx.fillRect(0,y,W,1);
+  // planet
+  drawPosterPlanet(ctx,W/2,310,165,p);
+  // radar overlay
+  const rc=document.createElement('canvas');rc.width=220;rc.height=220;
+  drawRadar(rc,rd,p.col);ctx.drawImage(rc,W/2-110,200,220,220);
+  // top mono
+  ctx.font=`13px 'Space Mono',monospace`;
+  ctx.fillStyle=`rgba(${hexRgb(p.col)},.75)`;ctx.textAlign='left';
+  ctx.shadowBlur=8;ctx.shadowColor=`rgba(${hexRgb(p.col)},.4)`;
+  ctx.fillText(`GRAVITY COLLAPSE // ${p.id}`,72,86);ctx.shadowBlur=0;
+  ctx.strokeStyle=`rgba(${hexRgb(p.col)},.2)`;ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(72,96);ctx.lineTo(728,96);ctx.stroke();
+  // name with planet color glow
+  ctx.fillStyle='#dde0f0';ctx.font=`300 50px 'Noto Serif SC',serif`;
+  ctx.shadowBlur=0;ctx.fillText(p.name,72,610);
+  // subtitle colored + glowing
+  ctx.fillStyle=p.col;ctx.font=`italic 21px 'Noto Serif SC',serif`;
+  ctx.shadowBlur=16;ctx.shadowColor=`rgba(${hexRgb(p.col)},.6)`;
+  ctx.fillText(`—— ${p.sub}`,72,655);ctx.shadowBlur=0;
+  // colored divider line
+  ctx.strokeStyle=`rgba(${hexRgb(p.col)},.4)`;ctx.lineWidth=1;
+  ctx.shadowBlur=6;ctx.shadowColor=`rgba(${hexRgb(p.col)},.4)`;
+  ctx.beginPath();ctx.moveTo(72,672);ctx.lineTo(728,672);ctx.stroke();ctx.shadowBlur=0;
+  // quote
+  ctx.fillStyle='rgba(155,160,185,.82)';ctx.font=`300 16px 'Noto Serif SC',serif`;
+  let qy=706;
+  p.quote.split('\n').filter(l=>l.trim()).forEach(line=>{
+    wrapText(ctx,line,640).forEach(wl=>{if(qy<1090){ctx.fillText(wl,72,qy);qy+=30;}});qy+=7;
+  });
+  // bottom bar
+  ctx.fillStyle='rgba(255,255,255,.035)';ctx.fillRect(0,H-58,W,58);
+  ctx.font=`11px 'Space Mono',monospace`;ctx.fillStyle='rgba(255,255,255,.2)';
+  ctx.textAlign='left';ctx.fillText('无意义宇宙中的你',72,H-26);
+  ctx.textAlign='right';ctx.fillText('GRAVITY COLLAPSE v2.5',W-72,H-26);
+  // corners
+  ['tl','tr','bl','br'].forEach(c2=>{
+    const s=18,pp=38;
+    ctx.strokeStyle=`rgba(${hexRgb(p.col)},.38)`;ctx.lineWidth=1.5;ctx.beginPath();
+    if(c2==='tl'){ctx.moveTo(pp,pp+s);ctx.lineTo(pp,pp);ctx.lineTo(pp+s,pp);}
+    if(c2==='tr'){ctx.moveTo(W-pp-s,pp);ctx.lineTo(W-pp,pp);ctx.lineTo(W-pp,pp+s);}
+    if(c2==='bl'){ctx.moveTo(pp,H-pp-s);ctx.lineTo(pp,H-pp);ctx.lineTo(pp+s,H-pp);}
+    if(c2==='br'){ctx.moveTo(W-pp-s,H-pp);ctx.lineTo(W-pp,H-pp);ctx.lineTo(W-pp,H-pp-s);}
+    ctx.stroke();
+  });
+  posterURL=c.toDataURL('image/png');
+  const prev=document.getElementById('posterPreview');
+  if(prev)prev.src=posterURL;
+}
 
-        // 专属星球色晕背景
-        const grad = ctx.createRadialGradient(400, 380, 50, 400, 380, 400);
-        grad.addColorStop(0, bestPlanet.color + '33');
-        grad.addColorStop(1, 'transparent');
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, canvas.width, 800);
+function drawPosterPlanet(ctx,cx,cy,r,p){
+  const [c1,c2,c3]=p.orb;
+  const rgb=hexRgb(p.col);
+  // outer corona glow (3 layers)
+  [2.2,1.75,1.35].forEach((scale,i)=>{
+    const a=[.055,.09,.13][i];
+    const g=ctx.createRadialGradient(cx,cy,r*.3,cx,cy,r*scale);
+    g.addColorStop(0,`rgba(${rgb},${a})`);g.addColorStop(1,'transparent');
+    ctx.beginPath();ctx.arc(cx,cy,r*scale,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
+  });
+  // planet body gradient - col at highlight, orb for depth
+  const g2=ctx.createRadialGradient(cx-r*.32,cy-r*.28,0,cx,cy,r);
+  g2.addColorStop(0,p.col);g2.addColorStop(.35,c1);g2.addColorStop(.7,c2);g2.addColorStop(1,c3);
+  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fillStyle=g2;ctx.fill();
+  // specular highlight
+  const g3=ctx.createRadialGradient(cx-r*.3,cy-r*.28,0,cx-r*.1,cy-r*.1,r*.6);
+  g3.addColorStop(0,`rgba(${rgb},.35)`);g3.addColorStop(.5,`rgba(${rgb},.08)`);g3.addColorStop(1,'transparent');
+  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fillStyle=g3;ctx.fill();
+  // edge rim light
+  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);
+  ctx.strokeStyle=`rgba(${rgb},.25)`;ctx.lineWidth=2;ctx.stroke();
+  // orbit ring
+  ctx.save();ctx.translate(cx,cy);
+  ctx.beginPath();
+  for(let a=0;a<=Math.PI*2;a+=.04){
+    const rx=r*1.45*Math.cos(a),ry=r*1.45*.22*Math.sin(a);
+    a===0?ctx.moveTo(rx,ry):ctx.lineTo(rx,ry);
+  }
+  ctx.restore();
+  ctx.strokeStyle=`rgba(${rgb},.35)`;ctx.lineWidth=1.8;
+  ctx.shadowBlur=8;ctx.shadowColor=`rgba(${rgb},.5)`;ctx.stroke();ctx.shadowBlur=0;
+  // dashed secondary ring
+  ctx.save();ctx.translate(cx,cy);ctx.setLineDash([6,24]);
+  ctx.beginPath();
+  for(let a=0;a<=Math.PI*2;a+=.04){
+    const rx=r*1.6*Math.cos(a),ry=r*1.6*.18*Math.sin(a);
+    a===0?ctx.moveTo(rx,ry):ctx.lineTo(rx,ry);
+  }
+  ctx.restore();
+  ctx.strokeStyle=`rgba(${rgb},.18)`;ctx.lineWidth=1;ctx.stroke();ctx.setLineDash([]);
+  // orbital satellite dot
+  const dotA=-Math.PI*.25;
+  const dotX=cx+r*1.45*Math.cos(dotA),dotY=cy+r*1.45*.22*Math.sin(dotA);
+  ctx.beginPath();ctx.arc(dotX,dotY,4,0,Math.PI*2);
+  ctx.fillStyle=p.col;ctx.shadowBlur=10;ctx.shadowColor=p.col;ctx.fill();ctx.shadowBlur=0;
+}
 
-        // 绘制雷达图
-        drawRadar(ctx, 400, 380, 160, bestPlanet.color, scores);
+function dlPoster(){
+  if(!posterURL)return;
+  const a=document.createElement('a');a.download='gravity-collapse-star-map.png';a.href=posterURL;a.click();
+}
 
-        // --- 文本渲染排版 ---
-        ctx.textAlign = 'center';
-        
-        // 坐标编号
-        ctx.fillStyle = bestPlanet.color;
-        ctx.font = "18px 'Space Mono', monospace";
-        ctx.fillText(`COORDINATE ESTABLISHED // ${bestPlanet.id}`, 400, 700);
-
-        // 星球名称
-        ctx.fillStyle = '#ffffff';
-        ctx.font = "bold 64px 'Noto Serif SC', serif";
-        ctx.fillText(bestPlanet.name, 400, 780);
-
-        // 称号
-        ctx.fillStyle = bestPlanet.color;
-        ctx.font = "italic 32px 'Noto Serif SC', serif";
-        ctx.fillText(`—— ${bestPlanet.title} ——`, 400, 840);
-
-        // 核心心理引言金句
-        ctx.fillStyle = '#f3f4f6';
-        ctx.font = "26px 'Noto Serif SC', serif";
-        let nextY = wrapText(ctx, bestPlanet.quote, 400, 930, 600, 42);
-
-        // 底部装饰线
-        ctx.strokeStyle = bestPlanet.secondary;
-        ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.moveTo(350, nextY + 30); ctx.lineTo(450, nextY + 30); ctx.stroke();
-        
-        ctx.fillStyle = '#6b7280';
-        ctx.font = "14px 'Space Mono', monospace";
-        ctx.fillText(`SYSTEM.LOG.END // GRAVITY COLLAPSE`, 400, nextY + 70);
-
-        // 渲染到页面
-        document.getElementById('poster-img').src = canvas.toDataURL('image/png');
-        document.getElementById('screen-calc').classList.remove('active');
-        document.getElementById('screen-result').classList.add('active');
-    }
-
-    function drawRadar(ctx, cx, cy, radius, color, userScores) {
-        const axes = 7;
-        ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-        ctx.lineWidth = 1;
-        
-        // 绘制八角网格
-        for(let j=1; j<=3; j++) {
-            ctx.beginPath();
-            let r = radius * (j/3);
-            for(let i=0; i<=axes; i++) {
-                let angle = (Math.PI*2/axes)*i - Math.PI/2;
-                if(i===0) ctx.moveTo(cx + Math.cos(angle)*r, cy + Math.sin(angle)*r);
-                else ctx.lineTo(cx + Math.cos(angle)*r, cy + Math.sin(angle)*r);
-            }
-            ctx.stroke();
-        }
-
-        // 骨架线
-        for(let i=0; i<axes; i++) {
-            let angle = (Math.PI*2/axes)*i - Math.PI/2;
-            ctx.beginPath(); ctx.moveTo(cx, cy);
-            ctx.lineTo(cx + Math.cos(angle)*radius, cy + Math.sin(angle)*radius);
-            ctx.stroke();
-        }
-
-        // 提取分数绘制个人图形
-        let maxScore = 15; // 基准峰值
-        ctx.beginPath();
-        ctx.strokeStyle = color;
-        ctx.fillStyle = color + '2A'; // 增加透明度后缀
-        ctx.lineWidth = 3;
-        
-        let idx = 0;
-        for(let dim in userScores) {
-            let angle = (Math.PI*2/axes)*idx - Math.PI/2;
-            let val = Math.abs(userScores[dim] || 0);
-            let r = radius * (val / maxScore);
-            // 保证最小形状并加上一点随机抖动让多边形更自然
-            r = Math.max(30, Math.min(radius, r * (0.8 + Math.random()*0.4))); 
-
-            if(idx===0) ctx.moveTo(cx + Math.cos(angle)*r, cy + Math.sin(angle)*r);
-            else ctx.lineTo(cx + Math.cos(angle)*r, cy + Math.sin(angle)*r);
-            idx++;
-        }
-        ctx.closePath();
-        ctx.fill(); 
-        ctx.stroke();
-        
-        // 顶点发光点
-        idx = 0;
-        for(let dim in userScores) {
-            let angle = (Math.PI*2/axes)*idx - Math.PI/2;
-            let val = Math.abs(userScores[dim] || 0);
-            let r = radius * (val / maxScore);
-            r = Math.max(30, Math.min(radius, r * (0.8 + Math.random()*0.4))); 
-            
-            ctx.beginPath();
-            ctx.arc(cx + Math.cos(angle)*r, cy + Math.sin(angle)*r, 4, 0, Math.PI*2);
-            ctx.fillStyle = '#ffffff';
-            ctx.fill();
-            idx++;
-        }
-    }
-
-    // 换行渲染文字辅助函数
-    function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
-        const words = text.split('');
-        let line = '';
-        for(let n = 0; n < words.length; n++) {
-            let testLine = line + words[n];
-            let metrics = ctx.measureText(testLine);
-            if (metrics.width > maxWidth && n > 0) {
-                ctx.fillText(line, x, y);
-                line = words[n];
-                y += lineHeight;
-            } else { line = testLine; }
-        }
-        ctx.fillText(line, x, y);
-        return y; // 返回最终的Y坐标高度
-    }
+/* ══════════════════════════════════
+   BOOT
+══════════════════════════════════ */
+document.getElementById('btnStart').addEventListener('click',()=>{showScreen('screen-quiz');renderQ(0);});
 </script>
 </body>
 </html>
