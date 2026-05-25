@@ -156,12 +156,12 @@ body{background:var(--bg);color:var(--fg);font-family:var(--serif);min-height:10
 .r-text.bright{color:var(--fg-bright);font-size:0.95rem;line-height:2.1}
 .nasa-text{color:var(--fg-dim);font-style:italic;font-size:0.9rem;line-height:1.95;border-left:2px solid rgba(var(--planet-rgb,255,255,255),.12);padding-left:1.2rem}
 #radarCanvas{display:block;margin:0 auto}
-.dim-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem 2rem;margin-top:1.2rem}
+.dim-grid{display:grid;grid-template-columns:1fr;gap:.75rem;margin-top:1.2rem}
 .dim-row{display:flex;align-items:center;gap:.8rem}
-.dim-lbl{font-family:var(--mono);font-size:.6rem;letter-spacing:.1em;color:var(--fg-dim);min-width:6rem;white-space:nowrap}
-.dim-bg{flex:1;height:2px;background:var(--fg-ghost)}
-.dim-fill{height:100%;background:var(--planet-col,var(--cyan));box-shadow:0 0 5px var(--planet-glow,rgba(56,189,248,.4));transition:width 1.2s cubic-bezier(.16,1,.3,1);width:0%}
-.dim-val{font-family:var(--mono);font-size:.6rem;color:var(--fg-dim);min-width:1.6rem;text-align:right}
+.dim-lbl{font-family:var(--mono);font-size:.58rem;letter-spacing:.06em;color:var(--fg-dim);min-width:7.5rem;white-space:nowrap}
+.dim-bg{flex:1;height:4px;background:var(--fg-ghost);border-radius:0}
+.dim-fill{height:100%;background:var(--planet-col,var(--cyan));box-shadow:0 0 6px var(--planet-glow,rgba(56,189,248,.4));transition:width 1.2s cubic-bezier(.16,1,.3,1);width:0%}
+.dim-val{font-family:var(--mono);font-size:.58rem;color:var(--fg-dim);min-width:2.8rem;text-align:right;white-space:nowrap}
 .poster-sec{border-top:1px solid var(--fg-ghost);padding:1.8rem 0}
 .poster-preview{display:flex;justify-content:center;margin:1.2rem 0}
 #posterPreview{max-width:240px;width:100%;border:1px solid var(--fg-ghost);display:block}
@@ -794,7 +794,7 @@ function showResult(ranked){
 
     <div class="r-sec">
       <div class="r-sec-label">// GRAVITY FIELD ANALYSIS — 7 DIMENSIONS</div>
-      <canvas id="radarCanvas" width="300" height="300"></canvas>
+      <canvas id="radarCanvas" width="340" height="340"></canvas>
       <div class="dim-grid" id="dimGrid"></div>
     </div>
 
@@ -918,17 +918,34 @@ function drawRadar(canvas,data,pCol){
   ctx.strokeStyle=`rgba(${_rgb[0]},${_rgb[1]},${_rgb[2]},.8)`;ctx.lineWidth=1.5;
   ctx.shadowBlur=8;ctx.shadowColor=`rgba(${_rgb[0]},${_rgb[1]},${_rgb[2]},.5)`;ctx.stroke();ctx.shadowBlur=0;
   data.forEach((v,i)=>{const a=(Math.PI*2/n)*i-Math.PI/2,r=v*maxR;ctx.beginPath();ctx.arc(cx+Math.cos(a)*r,cy+Math.sin(a)*r,3.2,0,Math.PI*2);ctx.fillStyle=pCol||'#38bdf8';ctx.shadowBlur=5;ctx.shadowColor=pCol||'#38bdf8';ctx.fill();ctx.shadowBlur=0;});
-  ctx.font=`9px 'Space Mono',monospace`;ctx.fillStyle='rgba(255,255,255,.3)';ctx.textAlign='center';
+  const RADAR_LABELS = {
+    orbital_stability:  ['轨道','稳定性'],
+    internal_ocean:     ['内在','海洋'],
+    atmospheric_defense:['大气','防御'],
+    stellar_attachment: ['恒星','依附度'],
+    absurdity_perception:['荒诞','感知力'],
+    sisyphean_resistance:['西西弗','反抗力'],
+    value_alignment:    ['价值','一致性'],
+  };
+  ctx.font=`8.5px 'Noto Serif SC','PingFang SC',sans-serif`;
+  ctx.fillStyle='rgba(255,255,255,.45)';ctx.textAlign='center';
   DIM_KEYS.forEach((k,i)=>{
-    const a=(Math.PI*2/n)*i-Math.PI/2,lr=maxR+22;
-    ctx.fillText(DIM_LABELS[k].substring(0,4),cx+Math.cos(a)*lr,cy+Math.sin(a)*lr+4);
+    const a=(Math.PI*2/n)*i-Math.PI/2, lr=maxR+28;
+    const cx2=cx+Math.cos(a)*lr, cy2=cy+Math.sin(a)*lr;
+    const lines = RADAR_LABELS[k] || [k];
+    lines.forEach((line, li) => {
+      ctx.fillText(line, cx2, cy2 + li * 11 - (lines.length-1)*5);
+    });
   });
 }
 
 function buildDimGrid(el,data){
+  // data[i] is normalized 0~1; convert back to 1~7 for display
   el.innerHTML=DIM_KEYS.map((k,i)=>{
-    const pct=Math.round(data[i]*100);
-    return `<div class="dim-row"><span class="dim-lbl">${DIM_LABELS[k]}</span><div class="dim-bg"><div class="dim-fill" style="width:0" data-p="${pct}"></div></div><span class="dim-val">${pct}</span></div>`;
+    const val17 = (data[i]*6+1);           // 0→1, 1→7
+    const barPct = Math.round(data[i]*100); // bar width %
+    const display = val17.toFixed(1)+' / 7';
+    return `<div class="dim-row"><span class="dim-lbl">${DIM_LABELS[k]}</span><div class="dim-bg"><div class="dim-fill" style="width:0" data-p="${barPct}"></div></div><span class="dim-val">${display}</span></div>`;
   }).join('');
   setTimeout(()=>el.querySelectorAll('.dim-fill').forEach(b=>b.style.width=b.dataset.p+'%'),50);
 }
