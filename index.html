@@ -425,7 +425,7 @@ const PLANETS={
     profile:'如果你的星球是 Titan，你是一个无法用常规标准理解的人。<br><br>你有自己的心理生态。你的感受方式、价值系统、亲密节奏和生活逻辑，可能都与主流期待不太一样。别人可能觉得你奇怪、难懂、疏离，或者“不像正常人那样反应”。但那并不意味着你混乱。你只是拥有另一套气候系统。<br><br>你不适合被强行地球化。别人越是要求你按照常规方式表达爱、追求成功、处理痛苦、定义幸福，你越会感到窒息。你需要的是能够承认异质性的人，而不是试图把你改造成熟悉版本的人。<br><br>你的大气层很厚。你会保护自己，也会隐藏自己。你不轻易允许别人看见你的真实地貌。不是因为你虚假，而是因为你知道，常规目光容易误读异世界。<br><br>你的优势是独特性、完整的内在规则和不随便迎合的精神结构。你可以自成一体。你不是借由相似获得价值，而是通过差异证明存在。<br><br>你的危险在于，你可能过度认同“不被理解”。你可能把所有靠近都视为入侵，把所有解释都视为暴力。于是你保住了自己的异质性，却也可能失去连接。<br><br>你的课题是：允许自己不同，也允许某些人学习你的语言。',
     quote:'你不是不适合生命。\n你只是拒绝以常规方式活着。\n人们习惯用地球解释宇宙。\n所以他们看见你时，\n先说陌生，\n再说错误。\n但陌生不是错误。\n不同也不是失败。\n你可以拥有自己的天气，\n自己的湖泊，\n自己的夜晚。\n只是不要忘记：\n再遥远的世界，\n也可以被温柔地登陆。',
     secondary_desc:'你偶尔也活在另一套规则里——用自己的天气，自己的湖泊，抵御地球化的压力。',
-    keys:{orbital_stability:3, internal_ocean:4, atmospheric_defense:7, stellar_attachment:1, absurdity_perception:7, sisyphean_resistance:5, value_alignment:6}
+    keys:{orbital_stability:3, internal_ocean:4, atmospheric_defense:7, stellar_attachment:1, absurdity_perception:7, sisyphean_resistance:3, value_alignment:6}
   },
   'Proxima Centauri b':{
     id:'ProximaCentaurib', name:'Proxima Centauri b', sub:'最近的孤独者',
@@ -447,7 +447,7 @@ const PLANETS={
     profile:'如果你的星球是 Kepler-452b，你像一个过早成熟的人。<br><br>你身上有一种承担感。你可能从很早开始就习惯负责、忍耐、规划、照顾整体。你不一定喜欢这样，但你知道如果你不稳定，很多事情可能会随之失序。<br><br>你有强烈的长期主义倾向。你不太相信短暂热闹，也不容易被即时刺激打动。你更在意一件事是否能持续，一段关系是否能经得起时间，一个选择是否能与深层价值保持一致。<br><br>别人可能觉得你可靠、成熟、理性，甚至有点沉重。他们依赖你的稳定，却不一定看见你也会疲惫。你很少允许自己轻易崩溃，因为你早就把“继续运行”当成了一种责任。<br><br>你的优势是稳定、忠诚、承担力和价值一致性。你知道如何在混乱中建立秩序，也知道如何为重要的东西坚持很久。<br><br>你的危险在于，你可能把人生过早变成一项长期任务。你可能忘记自己不只是一个系统的支柱，也是一颗需要气候、休息和被照顾的星球。<br><br>你的课题是：不要总是替世界老去。',
     quote:'你不是老去得太快。\n你只是太早学会了替世界承担重量。\n人们赞美你的稳定，\n却很少询问它的代价。\n你可以继续负责。\n这也许是你的天性。\n但不要把所有疲惫都解释成使命。\n即使宇宙没有意义，\n你也不必独自维持它的秩序。\n有些时候，\n放下并不是坍缩，\n只是让自己重新成为人。',
     secondary_desc:'你也有一个更古老、更疲惫的自己，在某个角落替所有人承担着重量。',
-    keys:{orbital_stability:6, internal_ocean:3, atmospheric_defense:4, stellar_attachment:4, absurdity_perception:4, sisyphean_resistance:7, value_alignment:6}
+    keys:{orbital_stability:6, internal_ocean:3, atmospheric_defense:4, stellar_attachment:4, absurdity_perception:2, sisyphean_resistance:7, value_alignment:6}
   },
   'GJ 1214 b':{
     id:'GJ1214b', name:'GJ 1214 b', sub:'雾层保护者',
@@ -468,10 +468,10 @@ const DIM_LABELS={'orbital_stability':'轨道稳定性','internal_ocean':'内在
 /* ══════════════════════════════════
    STATE & HISTORY
 ══════════════════════════════════ */
-let curQ=0, hiddenCurQ=0, scores={}, hiddenMode=false, hiddenQueue=[], pendingResult=null;
+let curQ=0, hiddenCurQ=0, scores={}, dimCounts={}, hiddenMode=false, hiddenQueue=[], pendingResult=null;
 let answerHistory = []; 
 let isAnimating = false; 
-DIM_KEYS.forEach(k=>scores[k]=0);
+DIM_KEYS.forEach(k=>{ scores[k]=0; dimCounts[k]=0; });
 
 function computeScores(){
   const norm = {};
@@ -488,7 +488,8 @@ function computeResult(){
   Object.entries(PLANETS).forEach(([name, p]) => {
     let distSq = 0;
     DIM_KEYS.forEach(k => {
-      let uAvg = norm[k] / 3;
+      const count = dimCounts[k] || 3; // fallback to 3 if somehow uncounted
+      let uAvg = norm[k] / count;
       uAvg = Math.max(1, Math.min(7, uAvg));
       const pVal = p.keys[k] || 4; 
       distSq += Math.pow(pVal - uAvg, 2); 
@@ -581,7 +582,7 @@ function selectOpt(opt){
   
   answerHistory.push({ mode: 'main', qIdx: curQ, w: opt.w });
 
-  Object.entries(opt.w).forEach(([k,v])=>{if(scores[k]!==undefined)scores[k]+=v;});
+  Object.entries(opt.w).forEach(([k,v])=>{if(scores[k]!==undefined){ scores[k]+=v; dimCounts[k]=(dimCounts[k]||0)+1; }});
   curQ++;
   
   if(curQ >= QUESTIONS.length){
@@ -637,7 +638,7 @@ function selectHidden(opt){
   answerHistory.push({ mode: 'hidden', qIdx: hiddenCurQ, w: opt.w });
 
   Object.entries(opt.w).forEach(([k,v]) => {
-    if(scores[k]!==undefined) scores[k]+=v;
+    if(scores[k]!==undefined){ scores[k]+=v; dimCounts[k]=(dimCounts[k]||0)+1; }
   });
   hiddenCurQ++;
 
@@ -662,7 +663,7 @@ function goBack() {
   const last = answerHistory.pop();
   
   Object.entries(last.w).forEach(([k, v]) => {
-    if (scores[k] !== undefined) scores[k] -= v;
+    if (scores[k] !== undefined) { scores[k] -= v; dimCounts[k]=Math.max(0,(dimCounts[k]||0)-1); }
   });
 
   const body = document.getElementById('qBody');
@@ -835,7 +836,7 @@ function showResult(ranked){
   document.getElementById('btnRS').onclick = () => {
     if(calcTimeout) clearTimeout(calcTimeout);
     curQ=0; hiddenMode=false; hiddenQueue=[]; pendingResult=null;
-    DIM_KEYS.forEach(k=>scores[k]=0);
+    DIM_KEYS.forEach(k=>{ scores[k]=0; dimCounts[k]=0; });
     answerHistory = []; 
     isAnimating = false;
     document.getElementById('calcLines').textContent = ''; 
@@ -1082,7 +1083,7 @@ function dlPoster(){
 document.getElementById('btnStart').addEventListener('click',()=>{
   showScreen('screen-quiz');
   curQ=0;hiddenCurQ=0;
-  DIM_KEYS.forEach(k=>scores[k]=0);
+  DIM_KEYS.forEach(k=>{ scores[k]=0; dimCounts[k]=0; });
   hiddenMode=false;hiddenQueue=[];pendingResult=null;
   answerHistory=[]; // 初始清空历史
   renderQ(0,false);
