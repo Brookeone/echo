@@ -309,7 +309,8 @@ const HIDDEN_QUESTIONS = [
   {id:'H2', duelDims: ['internal_ocean', 'atmospheric_defense'], scenario:'比起建立一道安全的心理屏障来维持日常运转，我更愿意花费精力去深度剖析和体验自己内部那些复杂甚至隐秘的情绪。', getWeights(score){ return { internal_ocean: score, atmospheric_defense: 8 - score }; }},
   {id:'H3', duelDims: ['sisyphean_resistance', 'absurdity_perception'], scenario:'当发现所处的系统（如职场规则、社会惯例）存在严重缺陷时，比起冷眼旁观或独善其身，我更有强烈的冲动去打破并重构它。', getWeights(score){ return { sisyphean_resistance: score, absurdity_perception: 8 - score }; }},
   {id:'H4', duelDims: ['orbital_stability', null], scenario:'我对生活中“失控”和“未知”状态的容忍度较低，习惯通过建立明确的进度表、规则或计划来获取安全感。', getWeights(score){ return { orbital_stability: score, sisyphean_resistance: score >= 5 ? 2 : 0 }; }},
-  {id:'H5', duelDims: ['stellar_attachment', 'internal_ocean'], scenario:'在我看来，建立一段深刻的外部关系（与他人的强烈羁绊），比维持一个完全不受干扰的独立自我更重要。', getWeights(score){ return { stellar_attachment: score, internal_ocean: score >= 5 ? score - 2 : 2 }; }}
+  {id:'H5', duelDims: ['stellar_attachment', 'internal_ocean'], scenario:'在我看来，建立一段深刻的外部关系（与他人的强烈羁绊），比维持一个完全不受干扰的独立自我更重要。', getWeights(score){ return { stellar_attachment: score, internal_ocean: score >= 5 ? score - 2 : 2 }; }},
+  {id:'H6', duelDims: ['atmospheric_defense', 'absurdity_perception'], scenario:'当我与外界保持距离时，更多是因为我主动觉得"主流世界的规则不适合我"，而不是因为我不知道如何让别人看清自己。', getWeights(score){ return { absurdity_perception: score, atmospheric_defense: 8 - score }; }}
 ];
 HIDDEN_QUESTIONS.forEach(hq => {
   hq.options = [
@@ -435,7 +436,7 @@ const PLANETS={
     profile:'如果你的星球是 Proxima Centauri b，你是一个“近在咫尺的孤独者”。<br><br>你并不一定远离人群。你可能和别人保持正常关系，甚至看起来并不孤僻。但在真正深处，你常常觉得自己无法被抵达。你可以坐在一个人身边，却感觉彼此之间仍隔着光年。<br><br>你对亲密有复杂的感受。你渴望靠近，又害怕靠近后被强烈的情绪、期待或关系风暴灼伤。你可能会选择一个固定对象、一段关系或一种意义作为自己的恒星，但你也知道，太近的光可能带来危险。<br><br>你最大的矛盾是：你离别人不远，但很难真正交出自己。你不一定缺少陪伴，你缺少的是一种让你相信“我可以在这里安全存在”的关系。<br><br>你的优势是敏感、忠诚、观察力和对关系细节的深度感知。你能够察觉亲密中的温度变化，也很珍惜真正可靠的连接。<br><br>你的危险在于，你可能把孤独看作最终事实。你可能太早接受了“没人真正懂我”，于是当有人试图靠近时，你反而不相信它是真的。<br><br>你的课题是：重新理解距离。不是所有靠近都会灼伤你，也不是所有孤独都必须被保留。',
     quote:'距离不是用光年来计算的。\n有些人坐在你身边，\n却仍像另一颗星。\n你并不是真的遥远。\n你只是还没有相信，\n靠近可以不等于毁灭。\n宇宙中最近的恒星，\n仍需要光年抵达。\n所以你不必责怪自己慢。\n但如果有人愿意学习你的轨道，\n不要急着把他归入黑暗。',
     secondary_desc:'最近的孤独者。你坐在他们身边，却仍像隔着光年。',
-    keys:{orbital_stability:5, internal_ocean:5, atmospheric_defense:5, stellar_attachment:5, absurdity_perception:5, sisyphean_resistance:4, value_alignment:4}
+    keys:{orbital_stability:3, internal_ocean:4, atmospheric_defense:6, stellar_attachment:6, absurdity_perception:4, sisyphean_resistance:3, value_alignment:5}
   },
   'Kepler-452b':{
     id:'Kepler452b', name:'Kepler-452b', sub:'旧地球继承者',
